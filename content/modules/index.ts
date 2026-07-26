@@ -4,6 +4,8 @@ import { m3Lesson } from './m3.lesson';
 import { m4Lesson } from './m4.lesson';
 import { m5Lesson } from './m5.lesson';
 import { m6Lesson } from './m6.lesson';
+import { m7Lesson } from './m7.lesson';
+import { m8Lesson } from './m8.lesson';
 
 const m1Lesson = [
   '## 起步与所有权',
@@ -264,43 +266,6 @@ const m1Lesson = [
   '- [ ] 背出所有权三规则，并说明 move 与 `Copy` 的差别',
   '- [ ] 看懂 `borrow of moved value` 和 `cannot borrow as mutable` 两类报错，并独立修好',
   '- [ ] 用 `&` / `&mut` 设计函数签名，用切片避免不必要的 `clone`',
-].join('\n');
-
-const m7Lesson = [
-  '## axum + sqlx + WebSocket',
-  '',
-  '这一模块把前面所有零件拼成一个真实的后端服务，也是本课程最贴近日常工作的部分。',
-  '',
-  '你会学到：',
-  '',
-  '- **axum**：`Router` 与路由、提取器（`Path` / `Query` / `Json` / `State`）、`IntoResponse` 与统一错误响应、中间件与 `tower` 分层',
-  '- **应用状态**：把连接池、配置装进 `State`，以及它为什么必须 `Clone + Send + Sync`',
-  '- **sqlx**：连接池、编译期校验的 `query!` 宏、迁移（migrations）、事务、`FromRow` 映射',
-  '- **WebSocket**：升级握手、读写分离的两个循环、广播（broadcast channel）与连接生命周期管理',
-  '- 分层设计：把业务逻辑抽成**纯函数**，让 handler 只做解析与编排——这样才测得动',
-  '',
-  '**为什么 JD 需要它**：axum + sqlx + PostgreSQL 是当前 Rust 云后端最主流的组合，加拿大远程 Senior Rust 后端岗位几乎照抄这套栈。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线。练习只考纯函数化的 handler 逻辑（不绑端口），真正跑起服务器放在实战项目 p4。',
-].join('\n');
-
-const m8Lesson = [
-  '## 生产化与求职',
-  '',
-  '最后一段路：把"能跑的服务"变成"敢上线的服务"，再把它变成"能拿到 offer 的作品"。',
-  '',
-  '你会学到：',
-  '',
-  '- **可观测性**：`tracing` 的 span 与 event、结构化日志、`tracing-subscriber` 分级过滤，为什么它比 `println!` 强一个量级',
-  '- **错误处理工程化**：`thiserror` 定义库错误、`anyhow` 收口应用错误、错误如何映射成 HTTP 状态码',
-  '- **配置与部署**：环境变量与配置分层、多阶段 `Dockerfile`（构建缓存 + 精简运行镜像）、健康检查、优雅关闭',
-  '- **CI**：GitHub Actions 跑 `fmt --check` / `clippy -D warnings` / `test`，以及依赖缓存',
-  '- **求职**：基于真实 JD 的能力对照清单、简历里怎么描述 Rust 项目、高频面试题（所有权、生命周期、`Send`/`Sync`、async 陷阱）',
-  '',
-  '**为什么 JD 需要它**：Docker/CI/可观测性几乎出现在每一份后端 JD 的"加分项"甚至硬要求里。',
-  '面试到最后拼的往往不是语法，而是"你有没有把服务真正跑在生产里过"。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线；验收挂在实战项目 p4（完整 axum 后端 + tracing + Dockerfile + CI）。',
 ].join('\n');
 
 export const allModules: ModuleDef[] = [
