@@ -1,6 +1,9 @@
 import type { ModuleDef } from '@/lib/rust/types';
 import { m2Lesson } from './m2.lesson';
 import { m3Lesson } from './m3.lesson';
+import { m4Lesson } from './m4.lesson';
+import { m5Lesson } from './m5.lesson';
+import { m6Lesson } from './m6.lesson';
 
 const m1Lesson = [
   '## 起步与所有权',
@@ -261,63 +264,6 @@ const m1Lesson = [
   '- [ ] 背出所有权三规则，并说明 move 与 `Copy` 的差别',
   '- [ ] 看懂 `borrow of moved value` 和 `cannot borrow as mutable` 两类报错，并独立修好',
   '- [ ] 用 `&` / `&mut` 设计函数签名，用切片避免不必要的 `clone`',
-].join('\n');
-
-const m4Lesson = [
-  '## 迭代器、智能指针、测试与 serde',
-  '',
-  '这一模块把你从"能跑"推到"写得地道"。',
-  '',
-  '你会学到：',
-  '',
-  '- **迭代器**：`map` / `filter` / `fold` / `collect` / `zip` / `take_while` 等适配器链，惰性求值的含义，以及为什么迭代器链通常和手写循环一样快',
-  '- **闭包**：`Fn` / `FnMut` / `FnOnce` 三种闭包 trait，`move` 闭包捕获所有权',
-  '- **智能指针**：`Box<T>`（堆分配、递归类型）、`Rc<T>`（单线程共享所有权）、`RefCell<T>`（内部可变性，把借用检查推迟到运行时），以及 `Rc<RefCell<T>>` 这个经典组合的适用边界',
-  '- **测试**：`#[test]`、`assert_eq!`、`#[should_panic]`、返回 `Result` 的测试、集成测试目录 `tests/`',
-  '- **serde**：`#[derive(Serialize, Deserialize)]`、`serde_json` 的序列化与反序列化、字段重命名与可选字段',
-  '',
-  '**为什么 JD 需要它**：`serde` 出现在几乎每一份 Rust 后端 JD 里——REST API 的请求/响应体、配置文件、消息队列负载全靠它。',
-  '而"有单元测试习惯"是招聘方筛简历的硬指标；迭代器写法则直接影响 code review 通过率。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线；学完后是实战项目 `todo-json` CLI（serde 持久化 + 测试 + clippy 零警告）。',
-].join('\n');
-
-const m5Lesson = [
-  '## 线程与并发',
-  '',
-  'Rust 最有说服力的卖点：**"fearless concurrency"——数据竞争在编译期就被挡掉**。这一模块讲清楚它是怎么做到的。',
-  '',
-  '你会学到：',
-  '',
-  '- `std::thread::spawn` 与 `JoinHandle`，`move` 闭包为什么在这里是必需的',
-  '- **channel**：`std::sync::mpsc` 的发送端/接收端，多生产者单消费者模型',
-  '- **共享状态**：`Mutex<T>` 与 `RwLock<T>` 的加锁与毒化（poisoning），`Arc<T>` 跨线程共享所有权，经典组合 `Arc<Mutex<T>>`',
-  '- **`Send` 与 `Sync`**：两个 marker trait 到底约束了什么，为什么 `Rc` 不是 `Send` 而 `Arc` 是',
-  '- 死锁与锁粒度：持锁做 IO、持锁跨 await 是生产事故的常见来源',
-  '',
-  '**为什么 JD 需要它**：`Send + Sync` 是 Rust 面试的必考题，也是你写 axum handler 时编译器最爱报的那类错误的根源。',
-  '理解了它，模块六的 async 才不会变成"到处加 Arc 试到编译通过"。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线。本模块所有练习都会保证输出确定性（固定 join 顺序或先排序再打印）。',
-].join('\n');
-
-const m6Lesson = [
-  '## async 与 tokio',
-  '',
-  '到这里你开始真正接触 Rust 后端的主战场。绝大多数云后端 Rust JD 的第一硬要求就是 **async/await + Tokio**。',
-  '',
-  '你会学到：',
-  '',
-  '- `async fn` 返回的是 **Future**，不 `.await` 就什么都不会发生（惰性）；`.await` 处是让出点',
-  "- **Tokio 运行时**：`#[tokio::main]`、多线程调度器与 work stealing、`spawn` 出的任务为什么要求 `Send + 'static`",
-  '- **并发原语**：`join!` 并发等待、`select!` 竞速、`tokio::sync::{mpsc, oneshot, Mutex}` 与标准库版本的区别',
-  '- **阻塞的代价**：在 async 上下文里做同步 IO 或 CPU 密集运算会饿死整个调度器，正确做法是 `spawn_blocking`',
-  '- 超时、取消与优雅关闭：`timeout`、任务取消语义、`CancellationToken` 思路',
-  '',
-  '**为什么 JD 需要它**：高并发 API 服务、消息消费者、行情/撮合系统全部建立在 Tokio 之上。',
-  '"能解释 async Rust 的陷阱"（持锁跨 await、阻塞调度线程、Future 未被 await）几乎是 senior 岗位的分水岭问题。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线；学完后是实战项目「tokio 并发抓取器」。',
 ].join('\n');
 
 const m7Lesson = [
