@@ -156,7 +156,7 @@ export default function ResourcesPage() {
 
       {scenarioCards.length > 0 ? (
         <section className="border-b border-line bg-panel px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="w-full">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-brand">
               岗位场景 / Scenarios
             </p>

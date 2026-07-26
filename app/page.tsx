@@ -152,7 +152,7 @@ export default function Home() {
   return (
     <main className="w-full bg-bg">
       <section className="border-b border-line bg-[#07090d] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
-        <div className="mx-auto w-full max-w-7xl">
+        <div className="w-full">
           <div className="fx-hero-item flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line pb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-fg3">
             <span className="font-bold text-brand">RUST DOJO</span>
             <span className="hidden h-px w-10 bg-brand sm:block" />
@@ -217,7 +217,7 @@ export default function Home() {
       <Marquee items={jdKeywords} className="bg-[#07090d]" />
 
       <section aria-label="平台规模" className="border-b border-line bg-brand px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-px bg-white/25 lg:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-px bg-white/25 lg:grid-cols-4">
           {stats.map((stat) => (
             <div key={stat.label} className="bg-brand px-5 py-8 sm:px-6">
               <p className="text-5xl font-black leading-none text-white sm:text-6xl">
