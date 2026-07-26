@@ -108,7 +108,7 @@ export default function ResourcesPage() {
 
   return (
     <main className="w-full overflow-hidden bg-bg">
-      <EditorialPanel className="bg-[#07090d]" innerClassName="items-center">
+      <EditorialPanel className="bg-bg2" innerClassName="items-center">
         <header className="reveal-in grid w-full gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
           <div className="border-t border-line pt-6">
             <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.24em] text-brand">
@@ -197,7 +197,7 @@ export default function ResourcesPage() {
           <EditorialPanel
             key={group.id}
             ariaLabelledBy={`${group.id}-title`}
-            className={group.id === 'interview' ? 'bg-[#0b0d12]' : 'bg-[#07090d]'}
+            className={group.id === 'interview' ? 'bg-bg3' : 'bg-bg2'}
             innerClassName="items-center"
           >
             <div className="w-full">

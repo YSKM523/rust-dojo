@@ -76,13 +76,13 @@ export default function LoginPage() {
     }
   }
 
-  const input = 'w-full border border-line bg-[#0f1218] px-4 py-3 text-fg placeholder:text-fg3';
+  const input = 'w-full border border-line bg-panel2 px-4 py-3 text-fg placeholder:text-fg3';
   const primary =
     'w-full bg-brand px-4 py-3 font-bold text-white transition hover:bg-brand-hover disabled:opacity-50';
 
   return (
     <main className="w-full overflow-hidden bg-bg">
-      <EditorialPanel className="bg-[#07090d]" innerClassName="items-center">
+      <EditorialPanel className="bg-bg2" innerClassName="items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
           <header className="border-t border-line pt-6">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-brand">

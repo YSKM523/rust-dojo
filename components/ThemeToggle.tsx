@@ -4,7 +4,7 @@ import { Sun, Moon } from 'lucide-react';
 export function ThemeToggle() {
   function toggle() {
     const theme =
-      (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'light';
+      (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark';
     const next = theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
     try {

@@ -1,15 +1,8 @@
+import { TIER_COLORS } from '@/lib/tier';
 import Link from 'next/link';
 import type { ModuleDef, TierKey } from '@/lib/rust/types';
 import { ModuleProgressBadge } from './ModuleProgressBadge';
 
-// tierKey → 完整静态类名（Tailwind 不会生成 `bg-${x}-600` 这种动态拼接的类）
-const TIER_BADGE: Record<TierKey, string> = {
-  beginner: 'bg-emerald-600 text-white',
-  intermediate: 'bg-amber-600 text-white',
-  advanced: 'bg-orange-600 text-white',
-  senior: 'bg-rose-600 text-white',
-  sprint: 'bg-sky-600 text-white',
-};
 
 export function ModuleCard({
   module,
@@ -27,7 +20,7 @@ export function ModuleCard({
         <span className="text-3xl font-black leading-none text-fg3 group-hover:text-brand">
           {String(module.order).padStart(2, '0')}
         </span>
-        <span className={`px-2 py-0.5 text-xs font-bold ${TIER_BADGE[module.tierKey]}`}>
+        <span className={`px-2 py-0.5 text-xs font-bold ${TIER_COLORS[module.tierKey].badge}`}>
           {module.tierLabel}
         </span>
       </div>

@@ -27,7 +27,7 @@ export default function LearnPage() {
 
   return (
     <main className="w-full overflow-hidden bg-bg">
-      <EditorialPanel className="bg-[#07090d]" innerClassName="items-center">
+      <EditorialPanel className="bg-bg2" innerClassName="items-center">
         <div className="w-full">
           <header className="reveal-in grid gap-8 border-t border-line pt-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
             <div>

@@ -27,7 +27,7 @@ export default async function ResourceDetailPage({
 
   return (
     <main className="w-full overflow-hidden bg-bg">
-      <EditorialPanel className="bg-[#07090d]" innerClassName="items-start">
+      <EditorialPanel className="bg-bg2" innerClassName="items-start">
         <article className="w-full">
           <Link href="/resources" className="inline-flex items-center gap-1 text-sm font-bold text-link">
             <ChevronLeft size={15} /> 返回资料库

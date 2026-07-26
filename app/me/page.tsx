@@ -17,7 +17,7 @@ export default function MePage() {
 
   return (
     <main className="w-full overflow-hidden bg-bg">
-      <EditorialPanel className="bg-[#07090d]" innerClassName="items-center">
+      <EditorialPanel className="bg-bg2" innerClassName="items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
           <header className="border-t border-line pt-6">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-brand">

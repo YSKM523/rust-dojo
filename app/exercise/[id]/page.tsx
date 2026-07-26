@@ -17,7 +17,7 @@ export default async function ExercisePage({
 
   return (
     <main className="w-full overflow-hidden bg-bg">
-      <EditorialPanel className="bg-[#07090d]" innerClassName="items-start">
+      <EditorialPanel className="bg-bg2" innerClassName="items-start">
         <div className="w-full space-y-5">
           <header className="reveal-in border border-line bg-panel/92 p-6 shadow-card">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-brand">

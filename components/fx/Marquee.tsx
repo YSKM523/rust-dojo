@@ -5,15 +5,16 @@ interface MarqueeProps {
 
 /** JD 关键词跑马灯：内容双份 + track 位移 50% 无缝循环（纯 CSS，服务端组件）。 */
 export function Marquee({ items, className = '' }: MarqueeProps) {
+  const DOTS = ['bg-brand', 'bg-sky-500', 'bg-emerald-500', 'bg-violet-500'];
   const row = (ariaHidden: boolean) => (
     <span aria-hidden={ariaHidden} className="inline-flex items-center">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <span
           key={`${ariaHidden}-${item}`}
           className="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3"
         >
           {item}
-          <span aria-hidden className="inline-block h-1 w-1 bg-brand" />
+          <span aria-hidden className={`inline-block h-1 w-1 ${DOTS[index % DOTS.length]}`} />
         </span>
       ))}
     </span>

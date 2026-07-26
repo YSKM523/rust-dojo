@@ -1,10 +1,15 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* dark: 变体跟随 data-theme（不是系统偏好） */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme inline {
   --font-sans: var(--font-inter), "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, Menlo, monospace;
   --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-bg3: var(--bg3);
   --color-panel: var(--panel);
   --color-panel2: var(--panel2);
   --color-line: var(--line);
@@ -21,9 +26,35 @@
   --shadow-card: var(--shadow-card-v);
 }
 
+/* 亮色：暖纸面 + 深墨字（真·亮色版本） */
 :root,
 [data-theme="light"] {
+  --bg: #f7f2e9;
+  --bg2: #f2ecdf;
+  --bg3: #ece5d4;
+  --panel: #fdfaf4;
+  --panel2: #f0e9db;
+  --line: #ddd4c2;
+  --fg: #211d17;
+  --fg2: #524a3e;
+  --fg3: #7c7263;
+  --brand: #b0490f;
+  --brand-hover: #8f3a09;
+  --link: #9a460d;
+  --ok: #157a45;
+  --ok-soft: #e3f3e9;
+  --bad: #bd3527;
+  --bad-soft: #f9e7e3;
+  --shadow-card-v: 0 20px 60px rgba(80, 60, 20, 0.12);
+  --panel-grid-line: rgba(40, 30, 10, 0.055);
+  --panel-veil: rgba(240, 232, 216, 0.4);
+}
+
+/* 暗色：近黑蓝灰 + 暖白字 */
+[data-theme="dark"] {
   --bg: #090b0f;
+  --bg2: #07090d;
+  --bg3: #0b0d12;
   --panel: #12151b;
   --panel2: #1a1e27;
   --line: #2a2f3a;
@@ -38,28 +69,26 @@
   --bad: #ff7b6f;
   --bad-soft: #2a1411;
   --shadow-card-v: 0 28px 80px rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="dark"] {
-  --bg: #050609;
-  --panel: #0e1117;
-  --panel2: #171b23;
-  --line: #252b36;
-  --fg: #fffaf1;
-  --fg2: #c8bfb1;
-  --fg3: #828a88;
-  --brand: #b0490f;
-  --brand-hover: #8f3a09;
-  --link: #ef8f4a;
-  --ok: #46d38a;
-  --ok-soft: #0e2a1c;
-  --bad: #f3766a;
-  --bad-soft: #2a1411;
-  --shadow-card-v: 0 24px 70px rgba(0, 0, 0, 0.28);
+  --panel-grid-line: rgba(255, 255, 255, 0.045);
+  --panel-veil: rgba(5, 6, 9, 0.34);
 }
 
 html {
   background: var(--bg);
+}
+
+/* EditorialPanel 纹理层（网格线/晕影随主题换色） */
+.panel-grid {
+  background-image:
+    linear-gradient(90deg, var(--panel-grid-line) 1px, transparent 1px),
+    linear-gradient(var(--panel-grid-line) 1px, transparent 1px);
+  background-size: 76px 76px;
+  opacity: 0.55;
+}
+.panel-veil {
+  background-image:
+    radial-gradient(circle at 78% 18%, rgba(185, 90, 10, 0.1), transparent 28%),
+    linear-gradient(180deg, transparent 0%, var(--panel-veil) 100%);
 }
 
 body {

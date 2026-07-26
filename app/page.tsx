@@ -24,15 +24,23 @@ const stats = [
     suffix: '',
     label: '大模块',
     caption: '从所有权到生产化',
+    block: 'bg-brand',
   },
   {
     value: allExercises.length || 60,
     suffix: allExercises.length ? '' : '+',
     label: '交互练习',
     caption: '写完即时判题',
+    block: 'bg-sky-700',
   },
-  { value: allProjects.length || 4, suffix: '', label: '本地实战项目', caption: 'cargo 真项目' },
-  { value: 3, suffix: '', label: '种判题模式', caption: '输出 / 编译 / 测试' },
+  {
+    value: allProjects.length || 4,
+    suffix: '',
+    label: '本地实战项目',
+    caption: 'cargo 真项目',
+    block: 'bg-emerald-700',
+  },
+  { value: 3, suffix: '', label: '种判题模式', caption: '输出 / 编译 / 测试', block: 'bg-violet-700' },
 ];
 
 const jdKeywords = [
@@ -53,24 +61,32 @@ const jdKeywords = [
 const whyRust = [
   {
     index: '01',
+    accentText: 'text-brand',
+    accentBar: 'border-brand',
     title: '云后端是最大的需求方向',
     body: 'Rust 岗位集中在四类：云后端服务、交易与量化系统、区块链、基础设施与编译器。其中云后端占比最大，JD 里反复出现的是 tokio、axum/actix、sqlx、gRPC 与 Kubernetes——本站的路线就沿着这条主线铺。',
     tag: 'tokio · axum · sqlx',
   },
   {
     index: '02',
+    accentText: 'text-sky-700 dark:text-sky-400',
+    accentBar: 'border-sky-600',
     title: '薪资锚点写在招聘页上',
     body: 'Sangoma 的加拿大远程 Senior Backend Developer (Rust) 公开区间 120,000–135,000 CAD；美国侧 EngFlow 160,000–220,000 USD、Radar 200,000–300,000 USD。这些是 2026-07 抓到的挂牌数字，不是市场推断。',
     tag: '2026-07 公开挂牌',
   },
   {
     index: '03',
+    accentText: 'text-emerald-700 dark:text-emerald-400',
+    accentBar: 'border-emerald-600',
     title: '内存安全正在推动迁移',
     body: '内存安全缺陷长期占据 C/C++ 代码库严重漏洞的主要部分，监管与大厂都在推动关键组件用内存安全语言重写。这类岗位要的不是“会写语法”，而是能讲清所有权与并发模型的人。',
     tag: '行业趋势',
   },
   {
     index: '04',
+    accentText: 'text-violet-700 dark:text-violet-400',
+    accentBar: 'border-violet-600',
     title: '门槛在心智模型，不在语法',
     body: '面试真正深挖的是所有权取舍、生命周期标注、静态与动态分发、Send + Sync、async 的阻塞与取消陷阱、unsafe 的边界。这些正是本站练习与面试题库的重心。',
     tag: '面试主战场',
@@ -91,18 +107,21 @@ const routePlan = [
 const methods = [
   {
     icon: TerminalSquare,
+    chip: 'bg-brand text-white',
     label: '浏览器内真编译',
     title: '写完就判，报错就是 rustc 报错',
     body: '每道练习直接提交到 Rust Playground 编译运行，返回真实的编译器诊断。三种判题模式：比对标准输出、要求通过编译、跑隐藏测试。',
   },
   {
     icon: Play,
+    chip: 'bg-sky-700 text-white',
     label: '本地 cargo 实战',
     title: '四个能放进简历的小项目',
     body: 'mini-grep、带持久化的 todo CLI、tokio 并发抓取器、axum + sqlx + WebSocket 完整后端。项目在你自己的机器上用 cargo 跑，和上班时一样。',
   },
   {
     icon: CheckSquare,
+    chip: 'bg-emerald-700 text-white',
     label: '验收清单',
     title: '完成的标准是写死的',
     body: '每个项目配一份可勾选的验收清单，含可复制的测试命令。练习与清单共用同一套进度，登录后云端同步，换设备继续。',
@@ -146,12 +165,13 @@ export default function Home() {
       summary: authored?.summary ?? row.summary,
       href: authored ? `/learn/${row.id}` : '/learn',
       tier: authored?.tierLabel ?? '制作中',
+      tierKey: authored?.tierKey,
     };
   });
 
   return (
     <main className="w-full bg-bg">
-      <section className="border-b border-line bg-[#07090d] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
+      <section className="border-b border-line bg-bg2 px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
         <div className="w-full">
           <div className="fx-hero-item flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line pb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-fg3">
             <span className="font-bold text-brand">RUST DOJO</span>
@@ -214,12 +234,12 @@ export default function Home() {
         </div>
       </section>
 
-      <Marquee items={jdKeywords} className="bg-[#07090d]" />
+      <Marquee items={jdKeywords} className="bg-bg2" />
 
-      <section aria-label="平台规模" className="border-b border-line bg-brand px-4 sm:px-6 lg:px-8">
+      <section aria-label="平台规模" className="border-b border-line bg-bg2 px-4 sm:px-6 lg:px-8">
         <div className="grid w-full grid-cols-2 gap-px bg-white/25 lg:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="bg-brand px-5 py-8 sm:px-6">
+            <div key={stat.label} className={`${stat.block} px-5 py-8 sm:px-6`}>
               <p className="text-5xl font-black leading-none text-white sm:text-6xl">
                 <CountUp value={stat.value} suffix={stat.suffix} />
               </p>
@@ -230,7 +250,7 @@ export default function Home() {
         </div>
       </section>
 
-      <EditorialPanel ariaLabelledBy="why-rust-title" className="bg-[#07090d]" innerClassName="items-center">
+      <EditorialPanel ariaLabelledBy="why-rust-title" className="bg-bg2" innerClassName="items-center">
         <div className="w-full">
           <SectionHead
             id="why-rust-title"
@@ -242,9 +262,13 @@ export default function Home() {
           <div className="mt-10 grid gap-px border border-line bg-line md:grid-cols-2">
             {whyRust.map((card, index) => (
               <Reveal key={card.index} delay={index * 90} className="bg-panel">
-                <article className="group h-full p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+                <article
+                  className={`group h-full border-t-2 ${card.accentBar} p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8`}
+                >
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="font-mono text-5xl font-black leading-none text-brand transition-transform duration-300 group-hover:-translate-y-1">
+                    <span
+                      className={`font-mono text-5xl font-black leading-none ${card.accentText} transition-transform duration-300 group-hover:-translate-y-1`}
+                    >
                       {card.index}
                     </span>
                     <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">
@@ -260,7 +284,7 @@ export default function Home() {
         </div>
       </EditorialPanel>
 
-      <EditorialPanel ariaLabelledBy="route-title" className="bg-[#0b0d12]" innerClassName="items-center">
+      <EditorialPanel ariaLabelledBy="route-title" className="bg-bg3" innerClassName="items-center">
         <div className="w-full">
           <SectionHead
             id="route-title"
@@ -280,7 +304,7 @@ export default function Home() {
         </div>
       </EditorialPanel>
 
-      <EditorialPanel ariaLabelledBy="method-title" className="bg-[#07090d]" innerClassName="items-center">
+      <EditorialPanel ariaLabelledBy="method-title" className="bg-bg2" innerClassName="items-center">
         <div className="w-full">
           <SectionHead
             id="method-title"
@@ -295,7 +319,7 @@ export default function Home() {
               return (
                 <Reveal key={method.label} delay={index * 100} className="bg-panel">
                   <article className="flex h-full flex-col p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
-                    <div className="flex h-10 w-10 items-center justify-center border border-line bg-panel2 text-brand">
+                    <div className={`flex h-10 w-10 items-center justify-center ${method.chip}`}>
                       <Icon size={18} />
                     </div>
                     <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-fg3">

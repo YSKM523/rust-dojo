@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import type { TierKey } from '@/lib/rust/types';
+import { TIER_COLORS } from '@/lib/tier';
 
 export interface LadderRow {
   id: string;
@@ -10,6 +12,7 @@ export interface LadderRow {
   summary: string;
   href: string;
   tier: string;
+  tierKey?: TierKey;
 }
 
 /**
@@ -68,6 +71,7 @@ export function ModuleLadder({ rows }: { rows: LadderRow[] }) {
   }, [rows.length]);
 
   const current = rows[active] ?? rows[0];
+  const currentColor = current.tierKey ? TIER_COLORS[current.tierKey] : undefined;
 
   return (
     <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,0.5fr)_minmax(0,1.5fr)]">
@@ -78,13 +82,15 @@ export function ModuleLadder({ rows }: { rows: LadderRow[] }) {
             {String(active + 1).padStart(2, '0')}
             <span className="text-2xl text-fg3"> / {String(rows.length).padStart(2, '0')}</span>
           </p>
-          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-brand">
+          <p
+            className={`mt-5 font-mono text-[11px] uppercase tracking-[0.24em] ${currentColor?.text ?? 'text-brand'}`}
+          >
             {current.tier}
           </p>
           <p className="mt-4 min-h-[6rem] max-w-xs text-sm leading-7 text-fg2">{current.summary}</p>
           <div className="mt-6 h-px w-full bg-line">
             <div
-              className="h-px bg-brand transition-all duration-500"
+              className={`h-px ${currentColor?.bar ?? 'bg-brand'} transition-all duration-500`}
               style={{ width: `${((active + 1) / rows.length) * 100}%` }}
             />
           </div>
@@ -105,7 +111,9 @@ export function ModuleLadder({ rows }: { rows: LadderRow[] }) {
               href={row.href}
               className="group grid grid-cols-[44px_1fr] items-baseline gap-x-4 py-6 sm:grid-cols-[64px_1fr_28px] sm:gap-x-6 lg:py-7"
             >
-              <span className="font-mono text-sm font-black text-brand sm:text-base">
+              <span
+                className={`font-mono text-sm font-black sm:text-base ${row.tierKey ? TIER_COLORS[row.tierKey].text : 'text-brand'}`}
+              >
                 {String(index + 1).padStart(2, '0')}
               </span>
               <span className="text-2xl font-black leading-tight tracking-tight text-fg transition-colors group-hover:text-brand sm:text-4xl lg:text-5xl">

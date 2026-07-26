@@ -19,25 +19,69 @@ function contrastRatio(foreground: string, background: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-describe('theme contrast', () => {
-  it('uses a dark default page background', () => {
-    const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
-    const lightTheme = css.match(/\[data-theme="light"\]\s*\{([\s\S]*?)\n\}/)?.[1];
-    const bg = lightTheme?.match(/--bg:\s*(#[0-9a-fA-F]{6});/)?.[1];
+function themeBlock(css: string, theme: 'light' | 'dark'): string {
+  const match = css.match(new RegExp(`^\\[data-theme="${theme}"\\]\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'));
+  if (!match) throw new Error(`theme block ${theme} not found`);
+  return match[1];
+}
 
-    expect(bg).toBeDefined();
-    expect(luminance(bg!), bg).toBeLessThan(0.08);
+function token(block: string, name: string): string {
+  const match = block.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6});`));
+  if (!match) throw new Error(`token --${name} not found`);
+  return match[1];
+}
+
+const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+const light = themeBlock(css, 'light');
+const dark = themeBlock(css, 'dark');
+
+describe('theme contrast', () => {
+  it('light theme is genuinely light, dark theme genuinely dark', () => {
+    expect(luminance(token(light, 'bg'))).toBeGreaterThan(0.7);
+    expect(luminance(token(dark, 'bg'))).toBeLessThan(0.08);
   });
 
-  it('brand buttons have AA contrast with white text', () => {
-    const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
-    const brandColors = [...css.matchAll(/--brand(?:-hover)?:\s*(#[0-9a-fA-F]{6});/g)].map(
-      (match) => match[1],
-    );
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ])('%s: body text tokens meet AA on their surfaces', (_name, block) => {
+    for (const surface of ['bg', 'bg2', 'bg3', 'panel', 'panel2']) {
+      expect(
+        contrastRatio(token(block, 'fg'), token(block, surface)),
+        `fg on ${surface}`,
+      ).toBeGreaterThanOrEqual(7);
+      expect(
+        contrastRatio(token(block, 'fg2'), token(block, surface)),
+        `fg2 on ${surface}`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
 
-    expect(brandColors.length).toBeGreaterThanOrEqual(2);
-    for (const color of brandColors) {
-      expect(contrastRatio('#ffffff', color), color).toBeGreaterThanOrEqual(4.5);
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ])('%s: brand blocks keep AA with white text', (_name, block) => {
+    for (const name of ['brand', 'brand-hover']) {
+      expect(contrastRatio('#ffffff', token(block, name)), name).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('accent block colors used in stats band keep AA with white text', () => {
+    // Tailwind v4 stock values: sky-700 / emerald-700 / violet-700
+    for (const hex of ['#0369a1', '#047857', '#6d28d9']) {
+      expect(contrastRatio('#ffffff', hex), hex).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ])('%s: link and status colors readable on bg', (_name, block) => {
+    for (const name of ['link', 'ok', 'bad']) {
+      expect(
+        contrastRatio(token(block, name), token(block, 'bg')),
+        name,
+      ).toBeGreaterThanOrEqual(3.4);
     }
   });
 });
