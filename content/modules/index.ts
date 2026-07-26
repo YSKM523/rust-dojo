@@ -1,4 +1,6 @@
 import type { ModuleDef } from '@/lib/rust/types';
+import { m2Lesson } from './m2.lesson';
+import { m3Lesson } from './m3.lesson';
 
 const m1Lesson = [
   '## 起步与所有权',
@@ -259,46 +261,6 @@ const m1Lesson = [
   '- [ ] 背出所有权三规则，并说明 move 与 `Copy` 的差别',
   '- [ ] 看懂 `borrow of moved value` 和 `cannot borrow as mutable` 两类报错，并独立修好',
   '- [ ] 用 `&` / `&mut` 设计函数签名，用切片避免不必要的 `clone`',
-].join('\n');
-
-const m2Lesson = [
-  '## 结构体、枚举与模式匹配',
-  '',
-  '有了所有权的地基，这一模块开始造"自己的类型"。Rust 的类型系统是它表达力的核心：',
-  '**结构体（struct）** 把相关数据聚成一个整体，**枚举（enum）** 表达"多选一"的状态，**模式匹配（match）** 则强制你把每一种情况都处理掉。',
-  '',
-  '你会学到：',
-  '',
-  '- 具名结构体、元组结构体、单元结构体；`impl` 块里写方法与关联函数；`#[derive(Debug, Clone, PartialEq)]` 的作用',
-  '- 枚举携带数据的能力（这是它和 C 枚举的本质区别），以及 `match` / `if let` / `let else` 三种解构写法',
-  '- Rust 最重要的两个枚举：`Option<T>` 表示"可能没有值"（Rust 没有 null），`Result<T, E>` 表示"可能失败"',
-  '- `unwrap` / `expect` / `?` 运算符，以及为什么生产代码里应当尽量避免裸 `unwrap`',
-  '',
-  '**为什么 JD 需要它**：后端服务本质上就是在处理"可能不存在的记录"和"可能失败的调用"。',
-  'Rust 岗位面试极高频的问题是"你怎么做错误处理"——答案的起点就是 `Option`/`Result` 加 `?`，而不是异常。',
-  '把状态编码进枚举、让编译器逼你穷尽分支，是 Rust 服务比同类服务少一大批线上空指针事故的直接原因。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线；学完后紧接着是第一个实战项目 `mini-grep` 命令行工具。',
-].join('\n');
-
-const m3Lesson = [
-  '## trait、泛型与生命周期',
-  '',
-  '这一模块是从"会写 Rust"到"能读懂别人 Rust 库"的分水岭。',
-  "`tokio`、`axum`、`serde` 的文档里满屏的 `impl Trait for T`、`where T: Send + 'static`，看不懂它们就没法真正用好生态。",
-  '',
-  '你会学到：',
-  '',
-  '- **trait**：定义共享行为（约等于接口），默认方法、trait bound、为自己的类型实现标准库 trait（`Display`、`From`、`Iterator`）',
-  '- **泛型**：函数、结构体、枚举上的类型参数；单态化（monomorphization）意味着泛型零运行时开销',
-  '- **静态分发 vs 动态分发**：`impl Trait` / `<T: Trait>` 与 `Box<dyn Trait>` 的取舍，什么时候必须用 trait object',
-  "- **生命周期**：`'a` 标注到底在说什么、省略规则（elision）为什么让你大多数时候不用写、结构体持有引用时为什么必须写",
-  '',
-  '**为什么 JD 需要它**：几乎所有 Rust 后端 JD 都写着 "traits, generics and lifetimes"。',
-  '实际工作中你会天天为自己的错误类型实现 `From`（好让 `?` 自动转换）、为配置结构体实现 `Default`、为领域对象实现 `Display`。',
-  '生命周期标注则是读懂编译器报错的必备语言——`does not live long enough` 这句话背后的推理，就是这一节要建立的直觉。',
-  '',
-  '> **本模块练习制作中**，将随后续批次上线。',
 ].join('\n');
 
 const m4Lesson = [
