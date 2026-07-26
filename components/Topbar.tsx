@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Database } from 'lucide-react';
+import { TerminalSquare } from 'lucide-react';
 import { useSession } from '@/lib/auth/useSession';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -31,7 +31,7 @@ export function Topbar() {
     <header className="sticky top-0 z-20 flex h-[58px] items-center gap-4 border-b border-line/80 bg-panel/90 px-4 backdrop-blur-xl">
       <Link href="/" className="flex shrink-0 items-center gap-2 font-extrabold tracking-tight text-fg">
         <span className="flex h-7 w-7 items-center justify-center rounded bg-[#15181d] text-brand shadow-card">
-          <Database size={13} />
+          <TerminalSquare size={13} />
         </span>
         Rust 道场
       </Link>

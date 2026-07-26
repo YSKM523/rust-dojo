@@ -5,6 +5,7 @@ import { EditorialPanel } from '@/components/EditorialPanel';
 import { LessonView } from '@/components/LessonView';
 import { getExerciseById } from '@/content/exercises';
 import { getModuleById } from '@/content/modules';
+import { getProjectById } from '@/content/projects';
 import { allResourceItems, getResourceById } from '@/content/resources';
 
 export function generateStaticParams() {
@@ -22,6 +23,7 @@ export default async function ResourceDetailPage({
 
   const moduleInfo = resource.moduleId ? getModuleById(resource.moduleId) : undefined;
   const exercise = resource.exerciseId ? getExerciseById(resource.exerciseId) : undefined;
+  const project = resource.projectId ? getProjectById(resource.projectId) : undefined;
 
   return (
     <main className="w-full overflow-hidden bg-bg">
@@ -62,6 +64,14 @@ export default async function ResourceDetailPage({
                     className="inline-flex items-center gap-2 border border-line bg-panel2 px-5 py-3 text-sm font-bold text-link transition hover:border-brand hover:text-white"
                   >
                     模块：{moduleInfo.title}
+                  </Link>
+                ) : null}
+                {project ? (
+                  <Link
+                    href={`/project/${project.id}`}
+                    className="inline-flex items-center gap-2 border border-line bg-panel2 px-5 py-3 text-sm font-bold text-link transition hover:border-brand hover:text-white"
+                  >
+                    项目：{project.title}
                   </Link>
                 ) : null}
               </div>

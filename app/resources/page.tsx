@@ -3,26 +3,20 @@ import { BookOpen, FileText, Library, Play, TerminalSquare } from 'lucide-react'
 import { EditorialPanel } from '@/components/EditorialPanel';
 import { getExerciseById } from '@/content/exercises';
 import { getModuleById } from '@/content/modules';
-import { resourceGroups } from '@/content/resources';
+import { getProjectById } from '@/content/projects';
+import { resourceGroups, scenarioCards } from '@/content/resources';
 import type { ResourceGroup, ResourceItem } from '@/content/resources';
 
 const groupIcon: Record<ResourceGroup['id'], typeof FileText> = {
-  basics: BookOpen,
-  articles: FileText,
-  templates: TerminalSquare,
-  references: BookOpen,
-};
-
-const groupMeta: Record<ResourceGroup['id'], string> = {
-  basics: 'Rust Basics',
-  articles: 'Article Index',
-  templates: 'Rust Patterns',
-  references: 'Concept Ledger',
+  jd: BookOpen,
+  interview: FileText,
+  cheatsheet: TerminalSquare,
 };
 
 function ResourceLinks({ item }: { item: ResourceItem }) {
   const moduleInfo = item.moduleId ? getModuleById(item.moduleId) : undefined;
   const exercise = item.exerciseId ? getExerciseById(item.exerciseId) : undefined;
+  const project = item.projectId ? getProjectById(item.projectId) : undefined;
 
   return (
     <div className="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
@@ -33,12 +27,17 @@ function ResourceLinks({ item }: { item: ResourceItem }) {
       ) : null}
       {moduleInfo ? (
         <Link href={`/learn/${moduleInfo.id}`} className="text-link hover:underline">
-          {moduleInfo.title}
+          模块：{moduleInfo.title}
         </Link>
       ) : null}
       {exercise ? (
         <Link href={`/exercise/${exercise.id}`} className="text-link hover:underline">
           练：{exercise.title}
+        </Link>
+      ) : null}
+      {project ? (
+        <Link href={`/project/${project.id}`} className="text-link hover:underline">
+          项目：{project.title}
         </Link>
       ) : null}
     </div>
@@ -117,42 +116,80 @@ export default function ResourcesPage() {
               FIELD LIBRARY
             </div>
             <h1 className="mt-6 max-w-4xl text-5xl font-black leading-none text-fg sm:text-7xl">
-              Rust 实战资料库
+              求职资料库
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-fg2">
-              把后端实战问题、代码模板和概念速查放在一起。内容将在后续任务中补齐。
+              基于 2026-07 Indeed 加拿大 / 美国岗位调研整理：JD 要什么、面试问什么、写代码时翻什么。
+              每一条能力都接回本站对应的模块与实战项目。
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/exercise/m1-01"
+                href="/learn"
                 className="inline-flex items-center gap-2 bg-brand px-5 py-3 font-bold text-white transition hover:bg-brand-hover"
               >
-                <Play size={16} /> 立即开练
+                <Play size={16} /> 按路线开始学
               </Link>
               <Link
-                href="/learn"
+                href="#cheatsheet-title"
                 className="inline-flex items-center gap-2 border border-line bg-panel2 px-5 py-3 font-semibold text-fg transition hover:border-brand"
               >
-                看路线图
+                直接看速查表
               </Link>
             </div>
           </div>
           <div className="grid gap-px bg-line shadow-card sm:grid-cols-3 lg:grid-cols-1">
             <div className="bg-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-fg3">Entries</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-fg3">条目</p>
               <p className="mt-3 text-4xl font-black text-fg">{resourceCount}</p>
             </div>
             <div className="bg-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-fg3">Sections</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-fg3">分区</p>
               <p className="mt-3 text-4xl font-black text-fg">{resourceGroups.length}</p>
             </div>
             <div className="bg-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-fg3">Mode</p>
-              <p className="mt-3 text-xl font-black text-fg">Practice</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-fg3">数据来源</p>
+              <p className="mt-3 text-xl font-black text-fg">2026-07 JD</p>
             </div>
           </div>
         </header>
       </EditorialPanel>
+
+      {scenarioCards.length > 0 ? (
+        <section className="border-b border-line bg-panel px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-brand">
+              岗位场景 / Scenarios
+            </p>
+            <div className="mt-6 grid gap-px border border-line bg-line md:grid-cols-3">
+              {scenarioCards.map((card, index) => (
+                <article key={card.title} className="bg-bg p-6">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-fg3">
+                    Case {String(index + 1).padStart(2, '0')}
+                  </p>
+                  <h3 className="mt-4 text-xl font-black leading-snug text-fg">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-fg2">{card.question}</p>
+                  <div className="mt-5 flex flex-wrap gap-1.5">
+                    {card.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="border border-line bg-panel2 px-2 py-0.5 text-xs text-fg3"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <Link
+                    href={card.exerciseId ? `/exercise/${card.exerciseId}` : `/learn/${card.moduleId}`}
+                    className="mt-6 inline-flex text-sm font-bold text-link hover:underline"
+                  >
+                    去对应模块
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {resourceGroups.map((group) => {
         const Icon = groupIcon[group.id];
@@ -160,7 +197,7 @@ export default function ResourcesPage() {
           <EditorialPanel
             key={group.id}
             ariaLabelledBy={`${group.id}-title`}
-            className={group.id === 'templates' ? 'bg-[#0b0d12]' : 'bg-[#07090d]'}
+            className={group.id === 'interview' ? 'bg-[#0b0d12]' : 'bg-[#07090d]'}
             innerClassName="items-center"
           >
             <div className="w-full">
@@ -168,7 +205,8 @@ export default function ResourcesPage() {
                 <div>
                   <p className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.22em] text-brand">
                     <Icon size={16} />
-                    {groupMeta[group.id]}
+                    {group.eyebrow}
+                    <span className="text-fg3">{group.items.length} 条</span>
                   </p>
                   <h2
                     id={`${group.id}-title`}

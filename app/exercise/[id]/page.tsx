@@ -3,6 +3,7 @@ import { EditorialPanel } from '@/components/EditorialPanel';
 import { Playground } from '@/components/Playground';
 import { ExerciseNavBar } from '@/components/ExerciseNavBar';
 import { notFound } from 'next/navigation';
+import { LessonView } from '@/components/LessonView';
 
 export default async function ExercisePage({
   params,
@@ -30,13 +31,15 @@ export default async function ExercisePage({
                 <h1 className="mt-2 text-4xl font-black leading-tight text-fg">{exercise.title}</h1>
               </div>
               <div className="border border-line bg-panel2 px-4 py-3 text-sm text-fg2">
-                Rust Playground · Judge pending
+                真实 rustc · Playground 判题
               </div>
             </div>
           </header>
           <section className="border border-line bg-panel p-5 text-fg2 shadow-card">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-fg3">Prompt</p>
-            <div className="mt-3 leading-7">{exercise.prompt}</div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-fg3">练习要求</p>
+            <div className="mt-3 leading-7">
+              <LessonView markdown={exercise.prompt} />
+            </div>
           </section>
           <Playground exercise={exercise} />
           {nav && <ExerciseNavBar nav={nav} />}

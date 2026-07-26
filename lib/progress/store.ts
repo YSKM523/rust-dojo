@@ -51,6 +51,20 @@ function pushCloud(id: string): void {
   }
 }
 
+// 登录态下把「取消完成」后台推到云端（同样尽力而为；失败无妨，下次 sync 对账）。
+function deleteCloud(id: string): void {
+  if (!authed || typeof window === 'undefined') return;
+  try {
+    void fetch('/api/progress', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ exerciseId: id }),
+    }).catch(() => {});
+  } catch {
+    /* 忽略 */
+  }
+}
+
 export function getCompleted(): string[] {
   return read();
 }
@@ -64,6 +78,15 @@ export function markCompleted(id: string): void {
   if (!ids.includes(id)) {
     write([...ids, id]);
     pushCloud(id);
+  }
+}
+
+// 撤销单条完成（项目验收清单可反复勾选/取消）。
+export function unmarkCompleted(id: string): void {
+  const ids = read();
+  if (ids.includes(id)) {
+    write(ids.filter((x) => x !== id));
+    deleteCloud(id);
   }
 }
 

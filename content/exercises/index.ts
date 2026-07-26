@@ -1,6 +1,7 @@
 import type { Exercise } from '@/lib/rust/types';
+import { module1Exercises } from './module1';
 
-export const allExercises: Exercise[] = [];
+export const allExercises: Exercise[] = [...module1Exercises];
 
 export function getExerciseById(id: string): Exercise | undefined {
   return allExercises.find((exercise) => exercise.id === id);
