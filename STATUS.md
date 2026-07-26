@@ -9,15 +9,15 @@
 - **判题**: 浏览器直连 play.rust-lang.org/execute（CORS `*`，无代理）；三模式 stdout/compile/tests；期望输出作者预生成（`scripts/gen-expected.mjs`），`npm run test:soundness`（PLAYGROUND_TESTS=1，串行打真实 Playground）守护答案不脱节
 - **进度**: local-first localStorage `rustdojo:completed` + 登录 union merge 到 D1；项目验收清单项（p1-01…）与练习共用 progress 命名空间；cookie `rdsess`
 
-## 当前状态（2026-07-26 Batch A 上线）
-- 平台全量可用：判题层、编辑器（CodeMirror rust）、项目验收清单、OTP 登录、云同步、AI copilot、落地页/资源页
-- 内容：**m1 完整**（9 题全部 soundness 实测过）；m2–m8 为导览版 lesson（练习未上）；p1–p4 项目 brief + 验收清单（43 项）完整；求职资源 25 条（JD 对照/面试题/速查表，基于真实 Indeed 调研）
-- 线上 E2E 已验：prod 判题、OTP 登录（D1 取码）、进度落 D1
+## 当前状态（2026-07-26 全站收官）
+- **内容全量上线：8 模块 61 道练习全部 soundness 实测**（每题答案必过 + starter 必挂/输出必异，`PLAYGROUND_TESTS=1 npm run test:soundness` 61/61）；p1–p4 项目 brief + 43 条验收清单；求职资源 25 条（真实 Indeed 调研）
+- 前端：awwwards 动效层（cargo boot hero、滚动模块阶梯、跑马灯、count-up、clip-reveal 语法，全部纯自建零依赖）；full-bleed 无侧边留白；**双主题**（暗=默认近黑蓝灰，亮=暖纸面，`dark:` 变体经 @custom-variant 跟随 data-theme）；多色系统（层级色 lib/tier.ts：小白绿/初级蓝/中级紫/高级琥珀/冲刺橙，数据条四色块）
+- 线上 E2E 已验：prod 判题、OTP 登录（D1 取码）、进度落 D1；双主题 WCAG AA 测试覆盖（app/theme-contrast.test.ts）
+- m7 注意：axum 不在 Playground top-100，练习用等价 handler 形状模型；真 axum 在 p4 项目
 
-## 下一步
-- Batch B: m2、m3 练习+完整 lesson；Batch C: m4–m6；Batch D: m7、m8 + awwwards-craft 视觉终审
-- 并行创作协议：每模块 agent 只写 `content/exercises/moduleN.ts` + `content/modules/mN.lesson.ts`（新文件），index 注册由集成者统一做，避免冲突
-- 遗留：无 cron/监控需求；域名未绑（workers.dev 够用）
+## 下一步（可选）
+- 域名绑定（如要对外）；学习过程中按需补题/修题
+- 内容创作协议（补新模块时用）：agent 只写 `content/exercises/moduleN.ts` + `content/modules/mN.lesson.ts`，index 注册由集成者做
 
 ## 坑
 - wrangler.jsonc 里 D1/KV id 为空串会导致所有 wrangler 命令拒绝解析（连 `d1 create` 都跑不了）
