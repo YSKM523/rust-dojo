@@ -71,7 +71,7 @@ export function Playground({ exercise }: { exercise: Exercise }) {
               type="button"
               onClick={run}
               disabled={running}
-              className="inline-flex items-center gap-2 rounded bg-brand px-4 py-2 font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="fx-press inline-flex items-center gap-2 rounded bg-brand px-4 py-2 font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Play size={16} />
               {running ? '正在编译运行（Rust Playground）…' : '运行'}

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 const themeScript =
-  "try{var t=localStorage.getItem('rustdojo:theme')||'light';document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}";
+  "try{var t=localStorage.getItem('rustdojo:theme')||'light';document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}document.documentElement.classList.add('fx-js')";
 
 export default function RootLayout({
   children,

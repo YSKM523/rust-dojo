@@ -92,6 +92,139 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------- */
+/* fx layer — 「编译器的仪式感」动效语法                                */
+/* 共享缓动/时长；所有动效只动 transform/opacity/clip-path             */
+/* ---------------------------------------------------------------- */
+:root {
+  --fx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fx-dur: 640ms;
+}
+
+/* 滚动进入：clip 揭示 + 上移。JS 加 .is-in 触发；无 JS 时保持可见。 */
+.fx-reveal {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+}
+html.fx-js .fx-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  clip-path: inset(0 0 22% 0);
+  transition:
+    opacity var(--fx-dur) var(--fx-ease),
+    transform var(--fx-dur) var(--fx-ease),
+    clip-path var(--fx-dur) var(--fx-ease);
+  transition-delay: var(--fx-delay, 0ms);
+}
+html.fx-js .fx-reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
+}
+
+/* hero 入场级联（CSS-only，页面加载即跑，不依赖 JS） */
+.fx-hero-item {
+  animation: fx-rise 700ms var(--fx-ease) both;
+  animation-delay: var(--fx-delay, 0ms);
+}
+@keyframes fx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    clip-path: inset(0 0 30% 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* 终端打字光标 */
+.fx-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  transform: translateY(0.18em);
+  background: var(--brand);
+  animation: fx-blink 1s steps(1) infinite;
+}
+@keyframes fx-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* JD 关键词跑马灯（双份内容位移 50%） */
+.fx-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.fx-marquee-track {
+  display: inline-flex;
+  animation: fx-marquee 36s linear infinite;
+  will-change: transform;
+}
+.fx-marquee:hover .fx-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes fx-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* 模块阶梯：非激活行退为描边字/低对比，激活行满墨 */
+.fx-ladder-row {
+  transition:
+    opacity 380ms var(--fx-ease),
+    transform 380ms var(--fx-ease);
+}
+.fx-ladder-row[data-active='false'] {
+  opacity: 0.55;
+}
+@media (min-width: 1024px) {
+  .fx-ladder-row[data-active='false'] {
+    opacity: 0.28;
+  }
+}
+.fx-ladder-row[data-active='true'] {
+  opacity: 1;
+  transform: translateX(6px);
+}
+
+/* 磁性按钮内层 */
+.fx-magnet {
+  transition: transform 260ms var(--fx-ease);
+  will-change: transform;
+}
+
+/* 按压反馈（工具页也用） */
+.fx-press {
+  transition: transform 120ms var(--fx-ease);
+}
+.fx-press:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.fx-js .fx-reveal,
+  .fx-hero-item {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .fx-marquee-track {
+    animation: none !important;
+  }
+  .fx-ladder-row[data-active='false'] {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

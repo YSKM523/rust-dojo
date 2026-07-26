@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { ArrowRight, CheckSquare, Map, Play, TerminalSquare } from 'lucide-react';
 import { EditorialPanel } from '@/components/EditorialPanel';
+import { CountUp } from '@/components/fx/CountUp';
+import { HeroTerminal } from '@/components/fx/HeroTerminal';
+import { Magnetic } from '@/components/fx/Magnetic';
+import { Marquee } from '@/components/fx/Marquee';
+import { ModuleLadder } from '@/components/fx/ModuleLadder';
+import { Reveal } from '@/components/fx/Reveal';
 import { allExercises } from '@/content/exercises';
 import { allModules, getModuleById } from '@/content/modules';
 import { allProjects } from '@/content/projects';
@@ -13,10 +19,35 @@ const heroSpecs = [
 ];
 
 const stats = [
-  { value: allModules.length ? String(allModules.length) : '8', label: '大模块', caption: '从所有权到生产化' },
-  { value: allExercises.length ? String(allExercises.length) : '60+', label: '交互练习', caption: '写完即时判题' },
-  { value: allProjects.length ? String(allProjects.length) : '4', label: '本地实战项目', caption: 'cargo 真项目' },
-  { value: '3', label: '种判题模式', caption: '输出 / 编译 / 测试' },
+  {
+    value: allModules.length || 8,
+    suffix: '',
+    label: '大模块',
+    caption: '从所有权到生产化',
+  },
+  {
+    value: allExercises.length || 60,
+    suffix: allExercises.length ? '' : '+',
+    label: '交互练习',
+    caption: '写完即时判题',
+  },
+  { value: allProjects.length || 4, suffix: '', label: '本地实战项目', caption: 'cargo 真项目' },
+  { value: 3, suffix: '', label: '种判题模式', caption: '输出 / 编译 / 测试' },
+];
+
+const jdKeywords = [
+  'OWNERSHIP',
+  'TOKIO',
+  'AXUM',
+  'SQLX',
+  'SERDE',
+  'SEND + SYNC',
+  'ASYNC / AWAIT',
+  'TRAIT',
+  'LIFETIME',
+  'POSTGRESQL',
+  'GRPC',
+  'DOCKER · CI',
 ];
 
 const whyRust = [
@@ -78,12 +109,51 @@ const methods = [
   },
 ];
 
+function SectionHead({
+  id,
+  kicker,
+  title,
+  lede,
+}: {
+  id: string;
+  kicker: string;
+  title: string;
+  lede: string;
+}) {
+  return (
+    <Reveal>
+      <div className="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+        <div>
+          <p className="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">
+            {kicker}
+          </p>
+          <h2 id={id} className="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">
+            {title}
+          </h2>
+        </div>
+        <p className="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">{lede}</p>
+      </div>
+    </Reveal>
+  );
+}
+
 export default function Home() {
+  const ladderRows = routePlan.map((row) => {
+    const authored = getModuleById(row.id);
+    return {
+      id: row.id,
+      title: authored?.title ?? row.title,
+      summary: authored?.summary ?? row.summary,
+      href: authored ? `/learn/${row.id}` : '/learn',
+      tier: authored?.tierLabel ?? '制作中',
+    };
+  });
+
   return (
     <main className="w-full bg-bg">
-      <section className="reveal-in border-b border-line bg-[#07090d] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
+      <section className="border-b border-line bg-[#07090d] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
         <div className="mx-auto w-full max-w-7xl">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line pb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-fg3">
+          <div className="fx-hero-item flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line pb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-fg3">
             <span className="font-bold text-brand">RUST DOJO</span>
             <span className="hidden h-px w-10 bg-brand sm:block" />
             <span>真实 rustc 判题</span>
@@ -93,32 +163,41 @@ export default function Home() {
             <span>中文 · 后端方向</span>
           </div>
 
-          <h1 className="mt-10 text-[clamp(3.25rem,13vw,10rem)] font-black leading-[0.86] tracking-tight text-fg">
+          <div className="fx-hero-item mt-8" style={{ ['--fx-delay' as string]: '80ms' }}>
+            <HeroTerminal />
+          </div>
+
+          <h1
+            className="fx-hero-item mt-6 text-[clamp(3.25rem,13vw,10rem)] font-black leading-[0.86] tracking-tight text-fg"
+            style={{ ['--fx-delay' as string]: '180ms' }}
+          >
             Rust 道场
           </h1>
 
           <div className="mt-10 grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-            <div>
+            <div className="fx-hero-item" style={{ ['--fx-delay' as string]: '320ms' }}>
               <p className="max-w-2xl text-xl leading-9 text-fg2 sm:text-2xl sm:leading-10">
                 从 0 到生产级后端，按 2026 真实招聘需求设计。
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/learn"
-                  className="inline-flex items-center gap-2 bg-brand px-6 py-3.5 font-bold text-white transition hover:bg-brand-hover"
-                >
-                  <Play size={16} /> 开始学习
-                </Link>
+                <Magnetic>
+                  <Link
+                    href="/learn"
+                    className="fx-press inline-flex items-center gap-2 bg-brand px-6 py-3.5 font-bold text-white transition hover:bg-brand-hover"
+                  >
+                    <Play size={16} /> 开始学习
+                  </Link>
+                </Magnetic>
                 <Link
                   href="/resources"
-                  className="inline-flex items-center gap-2 border border-line bg-panel2 px-6 py-3.5 font-semibold text-fg transition hover:border-brand hover:text-brand"
+                  className="fx-press inline-flex items-center gap-2 border border-line bg-panel2 px-6 py-3.5 font-semibold text-fg transition hover:border-brand hover:text-brand"
                 >
                   <Map size={16} /> 求职地图
                 </Link>
               </div>
             </div>
 
-            <dl className="border-t border-line">
+            <dl className="fx-hero-item border-t border-line" style={{ ['--fx-delay' as string]: '440ms' }}>
               {heroSpecs.map((spec) => (
                 <div
                   key={spec.label}
@@ -135,11 +214,15 @@ export default function Home() {
         </div>
       </section>
 
+      <Marquee items={jdKeywords} className="bg-[#07090d]" />
+
       <section aria-label="平台规模" className="border-b border-line bg-brand px-4 sm:px-6 lg:px-8">
         <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-px bg-white/25 lg:grid-cols-4">
           {stats.map((stat) => (
             <div key={stat.label} className="bg-brand px-5 py-8 sm:px-6">
-              <p className="text-5xl font-black leading-none text-white sm:text-6xl">{stat.value}</p>
+              <p className="text-5xl font-black leading-none text-white sm:text-6xl">
+                <CountUp value={stat.value} suffix={stat.suffix} />
+              </p>
               <p className="mt-3 text-sm font-bold text-white">{stat.label}</p>
               <p className="mt-1 text-xs leading-5 text-white/90">{stat.caption}</p>
             </div>
@@ -149,37 +232,29 @@ export default function Home() {
 
       <EditorialPanel ariaLabelledBy="why-rust-title" className="bg-[#07090d]" innerClassName="items-center">
         <div className="w-full">
-          <div className="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div>
-              <p className="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">
-                Why Rust / 岗位事实
-              </p>
-              <h2
-                id="why-rust-title"
-                className="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl"
-              >
-                为什么是 Rust
-              </h2>
-            </div>
-            <p className="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">
-              下面四条都来自 2026-07 Indeed 加拿大 / 美国岗位与公开招聘页的调研，不是感想。路线的每一个模块都能回溯到其中一条需求。
-            </p>
-          </div>
+          <SectionHead
+            id="why-rust-title"
+            kicker="Why Rust / 岗位事实"
+            title="为什么是 Rust"
+            lede="下面四条都来自 2026-07 Indeed 加拿大 / 美国岗位与公开招聘页的调研，不是感想。路线的每一个模块都能回溯到其中一条需求。"
+          />
 
           <div className="mt-10 grid gap-px border border-line bg-line md:grid-cols-2">
-            {whyRust.map((card) => (
-              <article key={card.index} className="bg-panel p-6 sm:p-8">
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="font-mono text-5xl font-black leading-none text-brand">
-                    {card.index}
-                  </span>
-                  <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">
-                    {card.tag}
-                  </span>
-                </div>
-                <h3 className="mt-8 text-2xl font-black leading-snug text-fg">{card.title}</h3>
-                <p className="mt-4 text-sm leading-7 text-fg2">{card.body}</p>
-              </article>
+            {whyRust.map((card, index) => (
+              <Reveal key={card.index} delay={index * 90} className="bg-panel">
+                <article className="group h-full p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="font-mono text-5xl font-black leading-none text-brand transition-transform duration-300 group-hover:-translate-y-1">
+                      {card.index}
+                    </span>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">
+                      {card.tag}
+                    </span>
+                  </div>
+                  <h3 className="mt-8 text-2xl font-black leading-snug text-fg">{card.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-fg2">{card.body}</p>
+                </article>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -187,47 +262,14 @@ export default function Home() {
 
       <EditorialPanel ariaLabelledBy="route-title" className="bg-[#0b0d12]" innerClassName="items-center">
         <div className="w-full">
-          <div className="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div>
-              <p className="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">
-                Route / 01 — 08
-              </p>
-              <h2 id="route-title" className="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">
-                八个模块
-              </h2>
-            </div>
-            <p className="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">
-              顺序即难度：前四个模块解决“看得懂、写得出”，后四个模块解决“能上线、能扛住并发”。每个模块后面挂练习，关键节点挂本地实战项目。
-            </p>
-          </div>
+          <SectionHead
+            id="route-title"
+            kicker="Route / 01 — 08"
+            title="八个模块"
+            lede="顺序即难度：前四个模块解决“看得懂、写得出”，后四个模块解决“能上线、能扛住并发”。每个模块后面挂练习，关键节点挂本地实战项目。"
+          />
 
-          <ol className="mt-10 border-t border-line">
-            {routePlan.map((row, index) => {
-              const authored = getModuleById(row.id);
-              return (
-                <li key={row.id} className="border-b border-line">
-                  <Link
-                    href={authored ? `/learn/${row.id}` : '/learn'}
-                    className="group grid grid-cols-[52px_1fr] items-baseline gap-x-4 gap-y-2 py-5 transition-colors hover:bg-panel sm:grid-cols-[72px_minmax(0,0.9fr)_minmax(0,1.4fr)_28px] sm:gap-x-8"
-                  >
-                    <span className="font-mono text-sm font-black text-brand sm:text-base">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span className="text-xl font-black leading-snug text-fg group-hover:text-brand sm:text-2xl">
-                      {authored?.title ?? row.title}
-                    </span>
-                    <span className="col-start-2 text-sm leading-6 text-fg2 sm:col-start-3">
-                      {authored?.summary ?? row.summary}
-                    </span>
-                    <ArrowRight
-                      size={18}
-                      className="hidden text-fg3 transition-colors group-hover:text-brand sm:block"
-                    />
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+          <ModuleLadder rows={ladderRows} />
 
           <Link
             href="/learn"
@@ -240,34 +282,29 @@ export default function Home() {
 
       <EditorialPanel ariaLabelledBy="method-title" className="bg-[#07090d]" innerClassName="items-center">
         <div className="w-full">
-          <div className="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div>
-              <p className="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">
-                Method / 怎么练
-              </p>
-              <h2 id="method-title" className="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">
-                学习方式
-              </h2>
-            </div>
-            <p className="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">
-              小题在浏览器里跑，大项目在你自己的终端里跑，验收标准写在清单上。不背语法，只留下能带走的工程习惯。
-            </p>
-          </div>
+          <SectionHead
+            id="method-title"
+            kicker="Method / 怎么练"
+            title="学习方式"
+            lede="小题在浏览器里跑，大项目在你自己的终端里跑，验收标准写在清单上。不背语法，只留下能带走的工程习惯。"
+          />
 
           <div className="mt-10 grid gap-px border border-line bg-line md:grid-cols-3">
-            {methods.map((method) => {
+            {methods.map((method, index) => {
               const Icon = method.icon;
               return (
-                <article key={method.label} className="flex flex-col bg-panel p-6 sm:p-8">
-                  <div className="flex h-10 w-10 items-center justify-center border border-line bg-panel2 text-brand">
-                    <Icon size={18} />
-                  </div>
-                  <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-fg3">
-                    {method.label}
-                  </p>
-                  <h3 className="mt-3 text-xl font-black leading-snug text-fg">{method.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-fg2">{method.body}</p>
-                </article>
+                <Reveal key={method.label} delay={index * 100} className="bg-panel">
+                  <article className="flex h-full flex-col p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+                    <div className="flex h-10 w-10 items-center justify-center border border-line bg-panel2 text-brand">
+                      <Icon size={18} />
+                    </div>
+                    <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-fg3">
+                      {method.label}
+                    </p>
+                    <h3 className="mt-3 text-xl font-black leading-snug text-fg">{method.title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-fg2">{method.body}</p>
+                  </article>
+                </Reveal>
               );
             })}
           </div>
@@ -286,20 +323,21 @@ export default function Home() {
                 </Link>
               </div>
               <div className="mt-6 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-                {featuredResources.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/resources/${item.id}`}
-                    className="group bg-panel p-5 transition-colors hover:bg-panel2"
-                  >
-                    <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">
-                      {item.category}
-                    </p>
-                    <h3 className="mt-3 text-base font-black leading-snug text-fg group-hover:text-brand">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-fg2">{item.summary}</p>
-                  </Link>
+                {featuredResources.map((item, index) => (
+                  <Reveal key={item.id} delay={index * 70} className="bg-panel">
+                    <Link
+                      href={`/resources/${item.id}`}
+                      className="group block h-full p-5 transition-colors hover:bg-panel2"
+                    >
+                      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">
+                        {item.category}
+                      </p>
+                      <h3 className="mt-3 text-base font-black leading-snug text-fg group-hover:text-brand">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-fg2">{item.summary}</p>
+                    </Link>
+                  </Reveal>
                 ))}
               </div>
             </div>
