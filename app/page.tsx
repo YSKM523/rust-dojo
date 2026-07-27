@@ -171,8 +171,19 @@ export default function Home() {
 
   return (
     <main className="w-full bg-bg">
-      <section className="border-b border-line bg-bg2 px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
-        <div className="w-full">
+      {/* hero 恒为暗色舞台（data-theme 局部锁定），蓝图背景在亮色主题下同样成立 */}
+      <section
+        data-theme="dark"
+        className="relative overflow-hidden border-b border-line bg-[#0a0e18] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16"
+      >
+        <img
+          src="/hero-blueprint.webp"
+          alt=""
+          aria-hidden
+          fetchPriority="high"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right"
+        />
+        <div className="relative w-full">
           <div className="fx-hero-item flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line pb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-fg3">
             <span className="font-bold text-brand">RUST DOJO</span>
             <span className="hidden h-px w-10 bg-brand sm:block" />
