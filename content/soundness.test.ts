@@ -82,20 +82,42 @@ describe.skipIf(!process.env.PLAYGROUND_TESTS)('exercise soundness (Rust Playgro
   }
 
   for (const exercise of compileExercises) {
-    it(`[compile] ${exercise.id} 参考答案编译通过、starterCode 必须编译失败`, async () => {
-      const solution = await runOnPlayground(exercise.solutionCode, {
+    it(`[compile] ${exercise.id} 参考答案过、starterCode 必挂、空 main 必挂`, async () => {
+      // 判题层会把 assertSource 追加到提交末尾，这里必须走同一条路径。
+      const withAsserts = (code: string) =>
+        exercise.assertSource?.trim() ? `${code}\n\n${exercise.assertSource.trim()}\n` : code;
+      const crateType = exercise.crateType ?? 'bin';
+
+      const solution = await runOnPlayground(withAsserts(exercise.solutionCode), {
         tests: false,
-        crateType: exercise.crateType ?? 'bin',
+        crateType,
       });
       expect(solution.success, `${exercise.id} 参考答案没通过:\n${solution.stderr}`).toBe(true);
+      if (exercise.expectedStdout !== undefined) {
+        expect(
+          normalizeStdout(solution.stdout),
+          `${exercise.id} 参考答案输出与 expectedStdout 不一致`,
+        ).toBe(normalizeStdout(exercise.expectedStdout));
+      }
 
-      const starter = await runOnPlayground(exercise.starterCode, {
+      const starter = await runOnPlayground(withAsserts(exercise.starterCode), {
         tests: false,
-        crateType: exercise.crateType ?? 'bin',
+        crateType,
       });
       expect(starter.success, `${exercise.id} 的 starterCode 竟然编译通过了，这题就没得修了`).toBe(
         false,
       );
+
+      // 加固回归：删光逻辑只留空 main 绝不能判过。
+      const emptyMain = await runOnPlayground(withAsserts('fn main() {}'), {
+        tests: false,
+        crateType,
+      });
+      const emptyMainPasses =
+        emptyMain.success &&
+        (exercise.expectedStdout === undefined ||
+          normalizeStdout(emptyMain.stdout) === normalizeStdout(exercise.expectedStdout));
+      expect(emptyMainPasses, `${exercise.id} 空 main 就能判过，加固失效`).toBe(false);
     });
   }
 

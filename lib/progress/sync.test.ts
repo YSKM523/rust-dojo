@@ -49,4 +49,28 @@ describe('bootstrapSync', () => {
     expect(calls).toEqual(['/api/auth/me', '/api/progress/sync']);
     expect(getCompleted().sort()).toEqual(['m1-01', 'm2-01']);
   });
+  // 回归：云端回包不得覆盖掉本地独有的 id。
+  // 服务端曾把项目验收清单 id（p1-xx）过滤掉，客户端 setAll 后本地勾选被清空。
+  it('keeps local-only ids when the server response omits them', async () => {
+    markCompleted('m1-01');
+    markCompleted('p1-01');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url === '/api/auth/me') {
+          return Promise.resolve(
+            new Response(JSON.stringify({ user: { email: 'a@example.com' } }), { status: 200 }),
+          );
+        }
+        // 服务端只回练习 id，漏掉了 p1-01
+        return Promise.resolve(
+          new Response(JSON.stringify({ ids: ['m1-01', 'm2-01'] }), { status: 200 }),
+        );
+      }),
+    );
+
+    await bootstrapSync();
+
+    expect(getCompleted().sort()).toEqual(['m1-01', 'm2-01', 'p1-01']);
+  });
 });

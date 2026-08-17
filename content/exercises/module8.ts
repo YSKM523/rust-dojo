@@ -7,6 +7,7 @@ export const module8Exercises: Exercise[] = [
     title: '修复：手写错误类型让 ? 用不了',
     difficulty: 4,
     judgeMode: 'compile',
+    expectedStdout: "监听 0.0.0.0:8080\n",
     prompt: [
       '### 修编译错误：`?` 转换不了，`Box<dyn Error>` 也收不下',
       '',
@@ -53,7 +54,7 @@ export const module8Exercises: Exercise[] = [
       '反过来在库里用 `anyhow` 会让调用方失去分支判断能力；在 main 里逐个定义枚举则纯属自找麻烦。',
       '',
       '**要求**：用 `thiserror` 改写 `ConfigError`（`Missing` 分支带 `#[error(...)]`，`BadPort` 分支用 `#[from]` 接住 `ParseIntError`），',
-      '让代码编译通过并输出（本题只判能否编译运行成功，不比对输出）：',
+      '让代码编译通过并**恰好**输出：',
       '',
       '```text',
       '监听 0.0.0.0:8080',
@@ -551,6 +552,7 @@ export const module8Exercises: Exercise[] = [
     title: '修复：优雅退出骨架的借用与 move 错误',
     difficulty: 4,
     judgeMode: 'compile',
+    expectedStdout: "worker 优雅退出，共处理 6 条任务\n",
     prompt: [
       '### 修编译错误：优雅关闭（graceful shutdown）',
       '',
@@ -582,7 +584,7 @@ export const module8Exercises: Exercise[] = [
       '- 原始 `tx` 必须 `drop`，否则所有克隆结束后 `recv()` 也永远等不到 `None`——这是 mpsc 头号坑；',
       '- `watch::Sender::send` 在接收端全没了时返回 `Err`，关闭信号用 `let _ = ...` 忽略它才不会在退出路径上 panic。',
       '',
-      '**要求**：只改必要的地方（两个 `mut` + 一次 `clone`），让它编译通过并输出（本题只判能否编译运行成功，不比对输出）：',
+      '**要求**：只改必要的地方（两个 `mut` + 一次 `clone`），让它编译通过并**恰好**输出：',
       '',
       '```text',
       'worker 优雅退出，共处理 6 条任务',

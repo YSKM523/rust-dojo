@@ -38,14 +38,25 @@ describe('content integrity', () => {
     }
   });
 
-  it('非 stdout 题不带 expectedStdout，非 tests 题不带 hiddenTests', () => {
+  // compile 题允许带 expectedStdout（带了就同时比对输出，堵住空 main 过关）；
+  // tests 题的输出由隐藏测试决定，不该再有 expectedStdout。
+  it('tests 题不带 expectedStdout，非 tests 题不带 hiddenTests', () => {
     for (const exercise of allExercises) {
-      if (exercise.judgeMode !== 'stdout') {
+      if (exercise.judgeMode === 'tests') {
         expect(exercise.expectedStdout, exercise.id).toBeUndefined();
       }
       if (exercise.judgeMode !== 'tests') {
         expect(exercise.hiddenTests, exercise.id).toBeUndefined();
       }
+    }
+  });
+
+  it('compile 题必须有加固：expectedStdout 或 assertSource 至少其一', () => {
+    for (const exercise of allExercises) {
+      if (exercise.judgeMode !== 'compile') continue;
+      const guarded =
+        (exercise.expectedStdout ?? '') !== '' || (exercise.assertSource ?? '').trim() !== '';
+      expect(guarded, `${exercise.id} 只判 run.success，空 main 也能过`).toBe(true);
     }
   });
 

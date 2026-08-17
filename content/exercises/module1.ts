@@ -276,6 +276,7 @@ export const module1Exercises: Exercise[] = [
     title: '修复：move 之后还在用',
     difficulty: 2,
     judgeMode: 'compile',
+    expectedStdout: "s1 = Rust 道场\ns2 = Rust 道场\n",
     prompt: [
       '### 修编译错误：borrow of moved value',
       '',
@@ -295,7 +296,7 @@ export const module1Exercises: Exercise[] = [
       's2 = Rust 道场',
       '```',
       '',
-      '本题只看**能否编译通过并正常运行**，不比对输出内容，但请老老实实保留两行打印。',
+      '本题会**逐行比对输出**，所以两行打印都要保留，不能靠删代码蒙混过关。',
       '',
       '想一想有几种改法：`clone()` 是最直接的一种；如果只是想"看一眼"，用借用（`&s1`）会更省。',
     ].join('\n'),
@@ -413,6 +414,7 @@ export const module1Exercises: Exercise[] = [
     title: '修复：可变借用与不可变借用打架',
     difficulty: 3,
     judgeMode: 'compile',
+    expectedStdout: "第一个分数是 90\n现在共有 4 个分数\n",
     prompt: [
       '### 修编译错误：cannot borrow as mutable',
       '',

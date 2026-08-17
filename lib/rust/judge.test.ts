@@ -195,3 +195,83 @@ describe('judgeExercise tests mode', () => {
     expect(result.stdout).toContain('test failed');
   });
 });
+
+describe('judgeExercise compile mode 加固', () => {
+  // 回归：compile 题曾只判 run.success，学员删光逻辑只留 `fn main() {}` 也能过。
+  it('带 expectedStdout 时同时比对输出，空 main 判不过', async () => {
+    runMock.mockResolvedValue({ success: true, stdout: '', stderr: '' });
+
+    const result = await judgeExercise(
+      exercise({ judgeMode: 'compile', expectedStdout: 'alpha\nbeta\n' }),
+      'fn main() {}',
+    );
+
+    expect(result.verdict.passed).toBe(false);
+    expect(result.verdict.reason).toContain('输出不符');
+    expect(result.expectedStdout).toBe('alpha\nbeta\n');
+  });
+
+  it('带 expectedStdout 且输出一致时判过', async () => {
+    runMock.mockResolvedValue({ success: true, stdout: 'alpha\nbeta\n', stderr: '' });
+
+    const result = await judgeExercise(
+      exercise({ judgeMode: 'compile', expectedStdout: 'alpha\nbeta\n' }),
+      'fn main() { /* ... */ }',
+    );
+
+    expect(result.verdict).toEqual({ passed: true });
+  });
+
+  it('不带 expectedStdout 时维持"只要能编译运行"的旧语义', async () => {
+    runMock.mockResolvedValue({ success: true, stdout: '随便什么输出\n', stderr: '' });
+
+    const result = await judgeExercise(
+      exercise({ judgeMode: 'compile', expectedStdout: undefined }),
+      'fn main() {}',
+    );
+
+    expect(result.verdict).toEqual({ passed: true });
+  });
+
+  it('编译失败时给 compile 专属的 reason', async () => {
+    runMock.mockResolvedValue({ success: false, stdout: '', stderr: 'error[E0382]: ...' });
+
+    const result = await judgeExercise(
+      exercise({ judgeMode: 'compile', expectedStdout: 'alpha\n' }),
+      'fn main() {}',
+    );
+
+    expect(result.verdict).toEqual({ passed: false, reason: '编译或运行未通过' });
+  });
+});
+
+describe('judgeExercise assertSource', () => {
+  it('把编译期断言追加到提交代码末尾', async () => {
+    runMock.mockResolvedValue({ success: true, stdout: '', stderr: '' });
+
+    await judgeExercise(
+      exercise({ judgeMode: 'compile', expectedStdout: undefined, assertSource: 'const _X: fn() = f;' }),
+      'fn main() {}',
+    );
+
+    expect(runMock).toHaveBeenCalledWith('fn main() {}\n\nconst _X: fn() = f;\n', {
+      crateType: 'bin',
+    });
+  });
+
+  it('没有 assertSource 时原样提交', async () => {
+    runMock.mockResolvedValue({ success: true, stdout: 'alpha\nbeta', stderr: '' });
+
+    await judgeExercise(exercise(), 'fn main() {}');
+
+    expect(runMock).toHaveBeenCalledWith('fn main() {}', { crateType: 'bin' });
+  });
+
+  it('assertSource 只有空白时不追加', async () => {
+    runMock.mockResolvedValue({ success: true, stdout: 'alpha\nbeta', stderr: '' });
+
+    await judgeExercise(exercise({ assertSource: '   \n  ' }), 'fn main() {}');
+
+    expect(runMock).toHaveBeenCalledWith('fn main() {}', { crateType: 'bin' });
+  });
+});

@@ -211,6 +211,12 @@ export const module3Exercises: Exercise[] = [
     title: '修复 E0369：缺少比较约束',
     difficulty: 3,
     judgeMode: 'compile',
+    assertSource: [
+      "// 断言：is_greater 必须是泛型函数（对多种可比较类型都可用）且返回 bool。",
+      "// 写死成 fn is_greater(a: i32, b: i32) 这类特化版本会在这里编译失败。",
+      "const _SIG_INT: fn(i32, i32) -> bool = is_greater;",
+      "const _SIG_CHAR: fn(char, char) -> bool = is_greater;",
+    ].join('\n'),
     prompt: [
       '### 泛型不是“什么操作都能做”',
       '',
@@ -533,6 +539,7 @@ export const module3Exercises: Exercise[] = [
     title: '修复悬垂引用：返回所有权',
     difficulty: 3,
     judgeMode: 'compile',
+    expectedStdout: "trait ready\n",
     prompt: [
       '### 为什么不能返回局部变量的引用',
       '',
@@ -671,6 +678,16 @@ export const module3Exercises: Exercise[] = [
     title: '修复持有引用的结构体',
     difficulty: 4,
     judgeMode: 'compile',
+    assertSource: [
+      "// 断言：Excerpt 必须真的持有借用（带生命周期参数），而不是改成 String 绕过；",
+      "// part() 必须返回借用而不是新分配的 String。",
+      "fn _assert_holds_borrow<'a>(text: &'a str) -> Excerpt<'a> {",
+      "    Excerpt { part: text }",
+      "}",
+      "fn _assert_part_returns_borrow<'a>(excerpt: &'a Excerpt<'a>) -> &'a str {",
+      "    excerpt.part()",
+      "}",
+    ].join('\n'),
     prompt: [
       '### struct 里的引用也必须说明来源关系',
       '',

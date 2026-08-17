@@ -274,6 +274,13 @@ export const module7Exercises: Exercise[] = [
     title: '修复 handler：extractor 顺序与返回类型',
     difficulty: 4,
     judgeMode: 'compile',
+    assertSource: [
+      "// 断言：create_order 必须保持 (Path<u64>, Json<CreateOrder>) 的 extractor 顺序，",
+      "// 且返回 Future<Output = Result<Json<Order>, StatusCode>>，否则不满足 Handler 约束。",
+      "fn _assert_handler_shape() {",
+      "    register(create_order);",
+      "}",
+    ].join('\n'),
     prompt: [
       '### 为什么一个普通 async fn 会“不满足 Handler”？',
       '',
@@ -851,6 +858,13 @@ export const module7Exercises: Exercise[] = [
     title: '分层错误：从数据库到 API',
     difficulty: 5,
     judgeMode: 'compile',
+    assertSource: [
+      "// 断言：两个跨层映射函数必须保持签名，From 转换链必须存在。",
+      "const _DB_TO_API: fn(DbErr) -> ApiError = db_error_to_api;",
+      "const _SVC_TO_API: fn(ServiceError) -> ApiError = service_error_to_api;",
+      "const _FROM_DB: fn(DbErr) -> ApiError = ApiError::from;",
+      "const _FROM_SVC: fn(ServiceError) -> ApiError = ApiError::from;",
+    ].join('\n'),
     prompt: [
       '### 不要让数据库错误穿透到 HTTP 边界',
       '',

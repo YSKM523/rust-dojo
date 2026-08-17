@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
  * 为 judgeMode === 'stdout' 的练习生成 expectedStdout。
+ * compile 题也可以带 expectedStdout（带了就同时比对输出，堵住空 main 过关），
+ * 用 --compile 把它们一起纳入。
  *
  * 用法：
- *   node scripts/gen-expected.mjs            # 全部 stdout 题
+ *   node scripts/gen-expected.mjs             # 全部 stdout 题
  *   node scripts/gen-expected.mjs m1-01 m1-04 # 只跑指定题目
+ *   node scripts/gen-expected.mjs --compile   # stdout + 有输出的 compile 题
  *
  * 做法：用 esbuild 把 TS 内容打成一份临时 ESM 就地加载（仓库里没有 tsx，
  * esbuild 已是 devDependency），然后串行调用官方 Rust Playground 编译运行
@@ -59,19 +62,22 @@ async function runOnPlayground(code, { tests = false, crateType = 'bin' } = {}) 
 }
 
 async function main() {
-  const only = new Set(process.argv.slice(2));
+  const args = process.argv.slice(2);
+  const withCompile = args.includes('--compile');
+  const only = new Set(args.filter((a) => !a.startsWith('--')));
   const allExercises = await loadExercises();
+  const wantedMode = (exercise) =>
+    exercise.judgeMode === 'stdout' || (withCompile && exercise.judgeMode === 'compile');
   const targets = allExercises.filter(
-    (exercise) =>
-      exercise.judgeMode === 'stdout' && (only.size === 0 || only.has(exercise.id)),
+    (exercise) => wantedMode(exercise) && (only.size === 0 || only.has(exercise.id)),
   );
 
   if (targets.length === 0) {
-    console.error('没有匹配的 stdout 练习。');
+    console.error('没有匹配的练习。');
     process.exit(1);
   }
 
-  console.log(`将为 ${targets.length} 道 stdout 练习生成 expectedStdout…\n`);
+  console.log(`将为 ${targets.length} 道练习生成 expectedStdout…\n`);
 
   for (const [index, exercise] of targets.entries()) {
     if (index > 0) await sleep(MIN_INTERVAL_MS);

@@ -2,13 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { readSession } from '@/lib/auth/cookie';
 import { listProgress, upsertProgress } from '@/lib/db/d1';
-import { getExerciseById } from '@/content/exercises';
-import { getChecklistItemById } from '@/content/projects';
-
-// 练习 id（'m1-01'）与项目验收清单项 id（'p1-01'）共用同一个进度命名空间。
-function isKnownProgressId(id: string): boolean {
-  return Boolean(getExerciseById(id) ?? getChecklistItemById(id));
-}
+import { isKnownProgressId } from '@/lib/progress/ids';
 
 export async function GET(req: NextRequest) {
   const { env } = getCloudflareContext();

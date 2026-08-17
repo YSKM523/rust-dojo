@@ -438,6 +438,7 @@ export const module2Exercises: Exercise[] = [
     title: '修复：match 分支不穷尽',
     difficulty: 2,
     judgeMode: 'compile',
+    expectedStdout: "现金\n信用卡\n微信\nEMT 转账\n",
     prompt: [
       '### 修编译错误：non-exhaustive patterns',
       '',

@@ -465,6 +465,7 @@ export const module4Exercises: Exercise[] = [
     title: '修复：Rc 里的数据改不动',
     difficulty: 3,
     judgeMode: 'compile',
+    expectedStdout: "shared = [1, 2, 3, 4]\nsecond = [1, 2, 3, 4]\nstrong_count = 2\n",
     prompt: [
       '### 修编译错误：cannot borrow data in an `Rc` as mutable',
       '',
@@ -491,7 +492,7 @@ export const module4Exercises: Exercise[] = [
       'strong_count = 2',
       '```',
       '',
-      '本题只看**能否编译通过并正常运行**，不逐字比对输出。注意 `println!` 里也要用 `.borrow()` 才能打印内部数据。',
+      '本题会**逐行比对输出**。注意 `println!` 里也要用 `.borrow()` 才能打印内部数据。',
       '',
       '别忘了 `use std::cell::RefCell;`。',
     ].join('\n'),

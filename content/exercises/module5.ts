@@ -176,6 +176,7 @@ export const module5Exercises: Exercise[] = [
     title: '修复 E0373：线程闭包需要 move',
     difficulty: 3,
     judgeMode: 'compile',
+    expectedStdout: "所有权已进入子线程\n",
     prompt: [
       '### 子线程不能借用可能先被释放的局部变量',
       '',
@@ -469,6 +470,7 @@ export const module5Exercises: Exercise[] = [
     title: '修复 E0277：Rc 不能跨线程',
     difficulty: 4,
     judgeMode: 'compile',
+    expectedStdout: "子线程求和 = 20，主线程仍持有 4 个元素\n",
     prompt: [
       '### 单线程引用计数不能在线程间转移',
       '',
@@ -495,8 +497,10 @@ export const module5Exercises: Exercise[] = [
       '    // TODO: Rc 不是 Send，不能被 move 到新线程；改用线程安全的共享所有权',
       '    let handle = thread::spawn(move || worker_numbers.iter().sum::<i32>());',
       '',
-      '    assert_eq!(handle.join().expect("子线程不应 panic"), 20);',
+      '    let total = handle.join().expect("子线程不应 panic");',
+      '    assert_eq!(total, 20);',
       '    assert_eq!(numbers.len(), 4);',
+      '    println!("子线程求和 = {total}，主线程仍持有 {} 个元素", numbers.len());',
       '}',
     ].join('\n'),
     solutionCode: [
@@ -509,8 +513,10 @@ export const module5Exercises: Exercise[] = [
       '',
       '    let handle = thread::spawn(move || worker_numbers.iter().sum::<i32>());',
       '',
-      '    assert_eq!(handle.join().expect("子线程不应 panic"), 20);',
+      '    let total = handle.join().expect("子线程不应 panic");',
+      '    assert_eq!(total, 20);',
       '    assert_eq!(numbers.len(), 4);',
+      '    println!("子线程求和 = {total}，主线程仍持有 {} 个元素", numbers.len());',
       '}',
     ].join('\n'),
     hints: [

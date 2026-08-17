@@ -36,6 +36,12 @@ function redactHiddenTestSource(output: string, hiddenTests: string): string {
   return redacted;
 }
 
+/** 把学员代码与作者追加的编译期断言拼成一次提交。 */
+function withAssertions(userCode: string, assertSource?: string): string {
+  const extra = assertSource?.trim();
+  return extra ? `${userCode}\n\n${extra}\n` : userCode;
+}
+
 export async function judgeExercise(ex: Exercise, userCode: string): Promise<JudgeResult> {
   if (ex.judgeMode === 'tests') {
     const hiddenTests = ex.hiddenTests ?? '';
@@ -56,24 +62,27 @@ export async function judgeExercise(ex: Exercise, userCode: string): Promise<Jud
     };
   }
 
-  const run = await runOnPlayground(userCode, {
+  const run = await runOnPlayground(withAssertions(userCode, ex.assertSource), {
     crateType: ex.crateType ?? 'bin',
   });
   const stderr = stripCargoNoise(run.stderr);
 
-  if (ex.judgeMode === 'compile') {
+  if (!run.success) {
     return {
-      verdict: run.success
-        ? { passed: true }
-        : { passed: false, reason: '编译或运行未通过' },
+      verdict: {
+        passed: false,
+        reason: ex.judgeMode === 'compile' ? '编译或运行未通过' : '编译或运行失败',
+      },
       stdout: run.stdout,
       stderr,
     };
   }
 
-  if (!run.success) {
+  // compile 题默认只要求"能编译并跑起来"；但作者一旦给了 expectedStdout，
+  // 就同时比对输出——否则删光逻辑、只留一个空 main 也能判过。
+  if (ex.judgeMode === 'compile' && ex.expectedStdout === undefined) {
     return {
-      verdict: { passed: false, reason: '编译或运行失败' },
+      verdict: { passed: true },
       stdout: run.stdout,
       stderr,
     };

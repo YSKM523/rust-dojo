@@ -1,4 +1,5 @@
 import { getCompleted, setAll, setAuthed } from './store';
+import { mergeIds } from './merge';
 
 /** 应用加载时调一次：登录态则把本地 ids 与云端并集合并，写回本地缓存。 */
 export async function bootstrapSync(): Promise<void> {
@@ -25,7 +26,10 @@ export async function bootstrapSync(): Promise<void> {
     if (!res.ok) return;
     const data = (await res.json()) as { ids: string[] };
     setAuthed(true);
-    setAll(data.ids);
+    // 与本地取并集，不要直接 setAll(data.ids)：
+    // 服务端若因白名单漏放行某类 id（曾发生在项目验收清单 p1-xx 上），
+    // 直接覆盖会把本地勾选清空。并集让客户端对服务端的过滤漂移免疫。
+    setAll(mergeIds(local, data.ids));
   } catch {
     /* 离线：保留本地 */
   }

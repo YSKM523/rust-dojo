@@ -182,7 +182,7 @@ export const module6Exercises: Exercise[] = [
       '用户资料就绪（耗时 60ms）\n订单列表就绪（耗时 40ms）\n总耗时小于 95ms：true\n',
     hints: [
       '`join!` 的参数是**还没 await 的 Future**：直接写 `load("用户资料", 60)`，不要加 `.await`。',
-      '`join!` 整体是一个 Future，所以要在它后面加 `.await` 才会开始执行。',
+      '`tokio::join!` 这个宏内部已经帮你 await 了，**不要**在它后面再写 `.await`；但它只能在 async 函数里用。',
       '完整写法：`let (user, orders) = tokio::join!(load("用户资料", 60), load("订单列表", 40));`。',
     ],
   },
@@ -192,6 +192,7 @@ export const module6Exercises: Exercise[] = [
     title: '修复：忘了 .await 的 Future',
     difficulty: 3,
     judgeMode: 'compile',
+    expectedStdout: "库存金额 = 100\n",
     prompt: [
       '### 修编译错误：expected `u32`, found future',
       '',
@@ -210,7 +211,7 @@ export const module6Exercises: Exercise[] = [
       '这也解释了另一个新手困惑：只写 `do_something();` 却发现什么都没发生，编译器只给一个 `unused_must_use` 警告。',
       '在 Rust 里，Future 不像 JavaScript 的 Promise 那样一创建就开始跑。',
       '',
-      '**要求**：修好这段代码，让它编译通过并输出（本题只判能否编译运行成功，不比对输出）：',
+      '**要求**：修好这段代码，让它编译通过并**恰好**输出：',
       '',
       '```text',
       '库存金额 = 100',
