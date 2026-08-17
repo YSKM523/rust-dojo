@@ -2,6 +2,7 @@ use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
+#[derive(serde::Serialize)]
 pub struct SessionPayload {
     pub uid: String,
     pub email: String,
@@ -9,12 +10,8 @@ pub struct SessionPayload {
 }
 
 pub fn sign_session(payload: &SessionPayload, secret: &str) -> String {
-    let json = serde_json::json!({
-        "uid": payload.uid,
-        "email": payload.email,
-        "exp": payload.exp,
-    });
-    let payload_b64 = URL_SAFE_NO_PAD.encode(serde_json::to_vec(&json).expect("JSON value serializes"));
+    let json = serde_json::to_string(payload).expect("session payload serializes");
+    let payload_b64 = URL_SAFE_NO_PAD.encode(json);
     let signature = signature_for(&payload_b64, secret);
     format!("{payload_b64}.{}", URL_SAFE_NO_PAD.encode(signature))
 }
@@ -101,6 +98,12 @@ mod tests {
         let t = sign_session(&p, "s3cret");
         assert_eq!(t.matches('.').count(), 1);
         assert!(!t.contains('='));
+        let (payload_b64, _) = t.split_once('.').unwrap();
+        let payload_json = String::from_utf8(URL_SAFE_NO_PAD.decode(payload_b64).unwrap()).unwrap();
+        assert_eq!(
+            payload_json,
+            r#"{"uid":"u-9","email":"x@y.z","exp":2000000000000}"#
+        );
         let back = verify_session(&t, "s3cret", 1_000_000_000_000).unwrap();
         assert_eq!(back.uid, "u-9");
         assert!(verify_session(&t, "wrong", 1_000_000_000_000).is_none());
@@ -115,5 +118,20 @@ mod tests {
         let token = format!("{payload}.{signature}");
 
         assert!(verify_session(&token, "s3cret", 0).is_none());
+    }
+
+    #[test]
+    fn signed_json_payload_passes_signature_verification() {
+        let payload = URL_SAFE_NO_PAD
+            .encode(br#"{"uid":"u-1","email":"a@b.c","exp":2000000000000}"#);
+        let mut mac = Hmac::<Sha256>::new_from_slice(b"s3cret").unwrap();
+        mac.update(payload.as_bytes());
+        let signature = URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes());
+        let token = format!("{payload}.{signature}");
+
+        let verified = verify_session(&token, "s3cret", 1_000_000_000_000).unwrap();
+        assert_eq!(verified.uid, "u-1");
+        assert_eq!(verified.email, "a@b.c");
+        assert_eq!(verified.exp, 2_000_000_000_000);
     }
 }
