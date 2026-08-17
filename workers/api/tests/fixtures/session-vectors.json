@@ -1,0 +1,73 @@
+[
+ {
+  "name": "valid",
+  "token": "eyJ1aWQiOiJ1LTEyMyIsImVtYWlsIjoiZG9qb0BleGFtcGxlLmNvbSIsImV4cCI6MTc1NTQ4NjQwMDAwMH0.jWCawpyiscuSlEbPUUSOfT5ctmvSzT3htUDVFFjmA2Y",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": {
+   "uid": "u-123",
+   "email": "dojo@example.com",
+   "exp": 1755486400000
+  }
+ },
+ {
+  "name": "valid-cjk-utf8",
+  "token": "eyJ1aWQiOiJ1LeS4reaWhyIsImVtYWlsIjoi6YGT5Zy6QGV4YW1wbGUuY29tIiwiZXhwIjoxNzU1NDg2NDAwMDAwfQ.C5UiDBPmvRHlT2fs7Fk8cm8B6v8qHOWilT-HKfvls78",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": {
+   "uid": "u-中文",
+   "email": "道场@example.com",
+   "exp": 1755486400000
+  }
+ },
+ {
+  "name": "expired",
+  "token": "eyJ1aWQiOiJ1LTEyMyIsImVtYWlsIjoiZG9qb0BleGFtcGxlLmNvbSIsImV4cCI6MTc1NTM5OTk5OTAwMH0.J7iuIuRjzY453csC1Hpoa6DEjowfaOR8-SR9uHp1bQw",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ },
+ {
+  "name": "exp-boundary-equal-now",
+  "token": "eyJ1aWQiOiJ1LTEyMyIsImVtYWlsIjoiZG9qb0BleGFtcGxlLmNvbSIsImV4cCI6MTc1NTQwMDAwMDAwMH0.cxxrz31L3VkYesxpibjymfZ8ng---3Y4IO543rUhWno",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ },
+ {
+  "name": "wrong-secret",
+  "token": "eyJ1aWQiOiJ1LTEyMyIsImVtYWlsIjoiZG9qb0BleGFtcGxlLmNvbSIsImV4cCI6MTc1NTQ4NjQwMDAwMH0.7LSafKwxWHTib6RqBK-VNAQt1juGLupLqLmrBYOOuEg",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ },
+ {
+  "name": "tampered-sig",
+  "token": "eyJ1aWQiOiJ1LTEyMyIsImVtYWlsIjoiZG9qb0BleGFtcGxlLmNvbSIsImV4cCI6MTc1NTQ4NjQwMDAwMH0.jWCawpyiscuSlEbPUUSOfT5ctmvSzT3htUDVFFjmAAA",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ },
+ {
+  "name": "bad-payload-json",
+  "token": "bm90LWpzb24.jWCawpyiscuSlEbPUUSOfT5ctmvSzT3htUDVFFjmA2Y",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ },
+ {
+  "name": "no-dot",
+  "token": "nodotatall",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ },
+ {
+  "name": "empty",
+  "token": "",
+  "secret": "test-secret-0123456789abcdef",
+  "now": 1755400000000,
+  "expect": null
+ }
+]
