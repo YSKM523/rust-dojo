@@ -45,12 +45,19 @@ pub struct Project {
     pub after_module_id: String,
     pub title: String,
     pub summary: String,
+    pub brief: String,
+    #[serde(skip)]
+    pub brief_html: String,
     pub items: Vec<ProjectItem>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ProjectItem {
     pub id: String,
+    pub text: String,
+    #[serde(rename = "testCommand")]
+    pub test_command: Option<String>,
+    pub hint: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -103,6 +110,9 @@ pub fn site_content() -> &'static SiteContent {
                 .expect("workers/api/site-content.json is valid");
         for module in &mut content.modules {
             module.lesson_html = render_markdown(&module.lesson);
+        }
+        for project in &mut content.projects {
+            project.brief_html = render_markdown(&project.brief);
         }
         for item in content
             .resources

@@ -3,6 +3,9 @@ use rust_dojo_api::pages::learn::{
     render_detail as render_learn_detail, render_index as render_learn_index,
     render_page as render_learn_page,
 };
+use rust_dojo_api::pages::project::{
+    render_detail as render_project_detail, render_page as render_project_page,
+};
 use rust_dojo_api::pages::resources::{render_detail, render_index, render_page};
 
 #[test]
@@ -158,4 +161,58 @@ fn learn_page_router_strips_the_prefix_only_once() {
 
     assert_eq!(page.status, 404);
     assert!(!page.html.contains("<h2>起步与所有权</h2>"));
+}
+
+#[test]
+fn project_pages_render_all_four_projects_and_all_43_checklist_ids() {
+    let mut checklist_ids = 0;
+
+    for id in ["p1", "p2", "p3", "p4"] {
+        let html = render_project_detail(id, None)
+            .expect("project detail renders")
+            .expect("known project exists");
+        assert!(html.contains(&format!("实战项目 {} / 本地 cargo", id.to_uppercase())));
+        checklist_ids += html.matches("data-id=\"").count();
+    }
+
+    assert_eq!(checklist_ids, 43);
+}
+
+#[test]
+fn project_page_server_renders_brief_and_complete_checklist_dom() {
+    let html = render_project_detail("p1", None)
+        .expect("project detail renders")
+        .expect("known project exists");
+
+    assert!(html.contains("<h2>目标</h2>"));
+    assert!(html.contains("写一个能用的命令行搜索工具"));
+    assert!(html.contains("prose max-w-none prose-pre:rounded-md prose-code:font-mono"));
+    assert!(html.contains("role=\"progressbar\""));
+    assert!(html.contains("aria-valuenow=\"0\""));
+    assert!(html.contains("data-id=\"p1-01\""));
+    assert!(html.contains(
+        "aria-label=\"复制命令：cargo new mini_grep &#38;&#38; cd mini_grep &#38;&#38; cargo run\""
+    ));
+    assert!(html.contains("data-checklist-hint"));
+    assert!(html.contains("href=\"/learn\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg\""));
+    assert!(!html.contains("href=\"/learn\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+}
+
+#[test]
+fn missing_project_renders_the_html_not_found_page() {
+    let page =
+        render_project_page("/project/nope", None).expect("missing project renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(page.html.contains("页面不存在"));
+    assert!(page.html.contains("<html lang=\"zh-CN\""));
+}
+
+#[test]
+fn project_page_router_strips_the_prefix_only_once() {
+    let page = render_project_page("/project//project/p1", None)
+        .expect("project namespace renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(!page.html.contains("写一个能用的命令行搜索工具"));
 }

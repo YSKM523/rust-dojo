@@ -21,6 +21,10 @@ pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 let page = crate::pages::learn::render_page(path, email.as_deref())
                     .map_err(|error| worker::Error::RustError(error.to_string()))?;
                 html(page.status, page.html)
+            } else if path.starts_with("/project/") {
+                let page = crate::pages::project::render_page(path, email.as_deref())
+                    .map_err(|error| worker::Error::RustError(error.to_string()))?;
+                html(page.status, page.html)
             } else {
                 let page = crate::pages::resources::render_page(path, email.as_deref())
                     .map_err(|error| worker::Error::RustError(error.to_string()))?;
