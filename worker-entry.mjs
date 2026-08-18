@@ -4,12 +4,15 @@
 import handler from './.open-next/worker.js';
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from './.open-next/worker.js';
 
-const MIGRATED = ['/resources', '/learn', '/project', '/assets/', '/icon.png', '/apple-icon.png'];
+const MIGRATED = ['/', '/login', '/me', '/resources', '/learn', '/project', '/assets/', '/icon.png', '/apple-icon.png'];
 
 function isMigrated(pathname) {
   if (pathname.startsWith('/api/')) return true;
   for (const p of MIGRATED) {
-    if (p.endsWith('/')) {
+    if (p === '/') {
+      // 首页只做精确匹配——'/' 当前缀会吞掉全站（含未迁移页与 /_next/*）。
+      if (pathname === '/') return true;
+    } else if (p.endsWith('/')) {
       if (pathname.startsWith(p)) return true;
     } else if (pathname === p || pathname.startsWith(p + '/')) {
       return true;
