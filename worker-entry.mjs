@@ -4,7 +4,7 @@
 import handler from './.open-next/worker.js';
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from './.open-next/worker.js';
 
-const MIGRATED = ['/', '/login', '/me', '/resources', '/learn', '/project', '/assets/', '/icon.png', '/apple-icon.png'];
+const MIGRATED = ['/', '/login', '/me', '/resources', '/learn', '/project', '/exercise', '/assets/', '/icon.png', '/apple-icon.png'];
 
 function isMigrated(pathname) {
   if (pathname.startsWith('/api/')) return true;
