@@ -5,10 +5,12 @@
  *   assets-dist/assets/site.css        Tailwind v4 CLI 编译 islands/site.css（扫描 Rust 模板 + islands）
  *   assets-dist/assets/js/*.js         esbuild 打包每个 island 入口（ESM，零框架，alias @ -> 仓库根）
  *   assets-dist/assets/fonts/*.woff2   自托管字体（latin subset），替代 next/font
- *   assets-dist/favicon.ico            现有站点图标
+ *   assets-dist/favicon.ico            现有站点 favicon
+ *   assets-dist/icon.png               512x512 app icon
+ *   assets-dist/apple-icon.png         180x180 Apple touch icon
  *
  * 产物整目录 gitignore；Worker 侧由 wrangler assets(directory=../../assets-dist) 挂到站点根，
- * 所以全部静态文件统一挂在 /assets/ 下，CSS 字体路径也使用 /assets/fonts/xxx.woff2。
+ * CSS/island/font 统一挂在 /assets/ 下；Next 文件约定的三枚图标保留站点根 URL。
  *
  * 依赖说明：走 npm 包 @tailwindcss/cli（官方 CLI，与已装的 tailwindcss 同版本，不引第二份
  * Tailwind），而不是 postcss 编程调用 —— 少一层胶水，且与 spec §6「Tailwind v4 standalone CLI」一致。
@@ -32,6 +34,7 @@ const CSS_ENTRY = path.join(ROOT, 'islands', 'site.css');
 const TEMPLATES_DIR = path.join(ROOT, 'workers', 'api', 'templates');
 const FAVICON_SOURCE = path.join(ROOT, 'app', 'favicon.ico');
 const FAVICON_OUT = path.join(OUT_ROOT, 'favicon.ico');
+const APP_ICONS = ['icon.png', 'apple-icon.png'];
 
 /**
  * island 入口 = islands/ 下所有 .ts（文件名即产物名：assets-dist/assets/js/<name>.js）。
@@ -125,9 +128,12 @@ async function copyFonts() {
   log('fonts', `${FONT_FILES.length} woff2 -> assets-dist/assets/fonts/`);
 }
 
-async function copyFavicon() {
+async function copyStaticIcons() {
   await copyFile(FAVICON_SOURCE, FAVICON_OUT);
-  log('favicon', 'app/favicon.ico -> assets-dist/favicon.ico');
+  for (const name of APP_ICONS) {
+    await copyFile(path.join(ROOT, 'app', name), path.join(OUT_ROOT, name));
+  }
+  log('icons', `app/{favicon.ico,${APP_ICONS.join(',')}} -> assets-dist/`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -217,6 +223,14 @@ async function selfCheck(entries) {
   } else {
     bad('favicon.ico 存在', FAVICON_OUT);
   }
+  for (const name of APP_ICONS) {
+    const iconPath = path.join(OUT_ROOT, name);
+    if (existsSync(iconPath) && (await stat(iconPath)).size > 0) {
+      ok(`${name} 存在`, `${(await stat(iconPath)).size} B`);
+    } else {
+      bad(`${name} 存在`, iconPath);
+    }
+  }
 
   console.log('\n[assets] self-check');
   for (const c of checks) {
@@ -233,7 +247,7 @@ async function main() {
   buildCss();
   await buildJs(entries);
   await copyFonts();
-  await copyFavicon();
+  await copyStaticIcons();
   await selfCheck(entries);
 }
 

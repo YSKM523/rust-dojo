@@ -15,19 +15,11 @@ pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         (Method::Delete, "/api/progress") => progress::delete(req, env).await,
         (Method::Post, "/api/progress/sync") => progress::sync(req, env).await,
         (Method::Post, "/api/ai") => ai::ask(req, env).await,
-        (Method::Get, "/resources" | "/resources/") => {
+        (Method::Get | Method::Head, path) if path != "/api" && !path.starts_with("/api/") => {
             let email = session_email(&req, &env);
-            html(crate::pages::resources::render_index(email.as_deref()))
-        }
-        (Method::Get, path) if path.starts_with("/resources/") => {
-            let id = path.trim_start_matches("/resources/");
-            let email = session_email(&req, &env);
-            match crate::pages::resources::render_detail(id, email.as_deref())
-                .map_err(|error| worker::Error::RustError(error.to_string()))?
-            {
-                Some(page) => worker::ResponseBuilder::new().from_html(page),
-                None => json(404, serde_json::json!({ "error": "not found" })),
-            }
+            let page = crate::pages::resources::render_page(path, email.as_deref())
+                .map_err(|error| worker::Error::RustError(error.to_string()))?;
+            html(page.status, page.html)
         }
         _ => json(404, serde_json::json!({ "error": "not found" })),
     }
@@ -38,9 +30,12 @@ fn session_email(req: &Request, env: &Env) -> Option<String> {
     auth::read_session(req, &secret).map(|session| session.email)
 }
 
-fn html(page: askama::Result<String>) -> Result<Response> {
+fn html(status: u16, page: String) -> Result<Response> {
     worker::ResponseBuilder::new()
-        .from_html(page.map_err(|error| worker::Error::RustError(error.to_string()))?)
+        .with_status(status)
+        .with_header("Cache-Control", "private, no-store")?
+        .with_header("Vary", "Cookie")?
+        .from_html(page)
 }
 
 pub(super) fn json(status: u16, value: serde_json::Value) -> Result<Response> {

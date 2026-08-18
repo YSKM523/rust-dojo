@@ -270,3 +270,78 @@ CLEAN LIVE: resources=200 slash=200 detail=200 css=200 favicon=200 api=200 body=
 - Raw HTML is escaped before the Askama `safe` insertion point; only server-generated pulldown HTML remains trusted.
 
 DONE
+
+## Fix round 3
+
+### Reviewer findings addressed
+
+- All SSR page responses, including HTML 404s, now pass through one `html()` builder with `Cache-Control: private, no-store`, `Vary: Cookie`, and the requested status code.
+- Page dispatch accepts `GET | HEAD`. Non-API page paths use a native-testable renderer; `/api/*` misses retain the existing JSON 404.
+- Resource detail parsing uses `strip_prefix("/resources/")` exactly once. A repeated embedded prefix therefore remains part of the id and misses instead of resolving a real resource.
+- Added a minimal Askama `not_found.html` that extends `base.html`, renders `页面不存在`, and links to `/`; unknown page/resource paths return it with status 404.
+- The base head now matches the three requested Next icon links. The assets build copies `favicon.ico`, `icon.png`, and `apple-icon.png` to the `assets-dist` public root and self-checks all three.
+- All three Topbar nav links select between complete literal active/inactive class strings from the template `active: &'static str`; both resources templates pass `"resources"`, and the 404 passes `"home"`.
+- Added `islands/progress-sync.ts`, which invokes the existing `bootstrapSync()` at module evaluation, and loaded `/assets/js/progress-sync.js` globally from `base.html`.
+
+### TDD RED/GREEN evidence
+
+The page-shell metadata regression first failed on the old favicon contract:
+
+```text
+test resources_index_renders_the_page_shell_and_group_content ... FAILED
+assertion failed: html.contains("<link rel=\"icon\" href=\"/favicon.ico\" sizes=\"48x48\" type=\"image/x-icon\">")
+```
+
+The strict-routing tests failed before production code existed:
+
+```text
+error[E0432]: unresolved import `rust_dojo_api::pages::resources::render_page`
+```
+
+The island module-load test likewise failed before its entry existed:
+
+```text
+FAIL islands/progress-sync.test.ts
+Cannot find module '/islands/progress-sync'
+```
+
+Focused GREEN reruns:
+
+```text
+cargo test --test content: 9 passed, 0 failed
+npm test -- islands/progress-sync.test.ts: 1 passed, 0 failed
+```
+
+The two requested Rust regressions assert that `/resources//resources/jd-ownership` is a 404 and that `/resources/nope` is an HTML 404 containing `页面不存在` and the home link.
+
+### Final verification
+
+- `cargo test`: 20 unit tests + 9 Task 3 integration tests passed; doc tests had 0 failures.
+- `cargo clippy --target wasm32-unknown-unknown --all-targets`: exit 0, no errors or warnings.
+- Node 22.22.2 full `npm test`: 41 files passed, 1 skipped; 156 tests passed, 61 skipped.
+- Node 22.22.2 `npm run assets`: self-check 24/24; `progress-sync.js` and all three root icons exist.
+- Generated JS inspection found exactly one file containing the progress-store key and exactly one shared chunk (`STORE_FILES=1 SHARED_CHUNKS=1`); both progress entries import that chunk, so no second store copy was bundled.
+
+### Wrangler smoke
+
+A fresh custom build reached `Ready on http://localhost:8788`; the local server was stopped after these checks:
+
+```text
+HEAD /resources                              200 text/html
+  Cache-Control: private, no-store
+  Vary: Cookie
+GET /resources//resources/jd-ownership      404 text/html; contains 页面不存在
+GET /resources/nope                         404 text/html; contains 页面不存在
+GET /icon.png                               200 image/png (40461 bytes)
+GET /apple-icon.png                         200 image/png (12770 bytes)
+GET /api/nope                               404 application/json; {"error":"not found"}
+```
+
+### Fix-round 3 self-review
+
+- Rechecked all seven findings against the diff: no API success route changed, and API misses still use `json(404, ...)`.
+- No Askama expression appears inside any template `class` attribute; active/inactive Tailwind strings are complete literals in separate branches.
+- Icon paths correspond to the configured `assets-dist` public root, so `/icon.png` and `/apple-icon.png` are served without an `/assets/` prefix.
+- Page 200 and page 404 responses share the same privacy headers; live HEAD behavior is delegated to workerd after the normal renderer runs.
+
+DONE

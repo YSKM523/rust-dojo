@@ -6,9 +6,21 @@
     Rust 道场
   </a>
   <nav class="flex h-full min-w-0 items-center gap-3 overflow-x-auto">
+    {% if active == "learn" %}
+    <a href="/learn" class="flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]">学习路线图</a>
+    {% else %}
     <a href="/learn" class="flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg">学习路线图</a>
+    {% endif %}
+    {% if active == "resources" %}
     <a href="/resources" class="flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]">资料库</a>
+    {% else %}
+    <a href="/resources" class="flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg">资料库</a>
+    {% endif %}
+    {% if active == "me" %}
+    <a href="/me" class="flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]">我的足迹</a>
+    {% else %}
     <a href="/me" class="flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg">我的足迹</a>
+    {% endif %}
   </nav>
   <div class="flex-1"></div>
   <button data-island="theme-toggle" aria-label="切换深浅色" class="flex h-8 w-8 items-center justify-center rounded-md border border-line text-fg2 hover:text-fg">

@@ -1,5 +1,5 @@
 use rust_dojo_api::pages::content::{render_markdown, site_content};
-use rust_dojo_api::pages::resources::{render_detail, render_index};
+use rust_dojo_api::pages::resources::{render_detail, render_index, render_page};
 
 #[test]
 fn generated_site_content_deserializes_with_all_modules() {
@@ -51,8 +51,19 @@ fn resources_index_renders_the_page_shell_and_group_content() {
     let html = render_index(None).expect("resources index renders");
 
     assert!(html.contains("<title>Rust 道场 — 从零到后端实战</title>"));
+    assert!(html.contains(
+        "<link rel=\"icon\" href=\"/favicon.ico\" sizes=\"48x48\" type=\"image/x-icon\">"
+    ));
+    assert!(html
+        .contains("<link rel=\"icon\" href=\"/icon.png\" sizes=\"512x512\" type=\"image/png\">"));
+    assert!(html.contains(
+        "<link rel=\"apple-touch-icon\" href=\"/apple-icon.png\" sizes=\"180x180\" type=\"image/png\">"
+    ));
+    assert!(html.contains("<script type=\"module\" src=\"/assets/js/progress-sync.js\"></script>"));
     assert!(html.contains("求职资料库"));
     assert!(html.contains("JD 能力对照清单"));
+    assert!(html.contains("href=\"/resources\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+    assert!(html.contains("href=\"/learn\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg\""));
     assert!(html.contains("data-island=\"theme-toggle\""));
     assert!(html.contains("href=\"/login\""));
     assert!(!html.contains("data-island=\"logout\""));
@@ -79,4 +90,25 @@ fn resource_detail_renders_markdown_inside_the_lesson_container() {
     assert!(render_detail("missing-resource", None)
         .expect("missing lookup does not fail")
         .is_none());
+}
+
+#[test]
+fn resource_page_router_strips_the_prefix_only_once() {
+    let page = render_page("/resources//resources/jd-ownership", None)
+        .expect("resource namespace renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(page.html.contains("页面不存在"));
+    assert!(!page.html.contains("JD 里长什么样"));
+}
+
+#[test]
+fn missing_resource_renders_the_html_not_found_page() {
+    let page = render_page("/resources/nope", None).expect("missing resource renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(page.html.contains("页面不存在"));
+    assert!(page.html.contains("href=\"/\""));
+    assert!(page.html.contains("<html lang=\"zh-CN\""));
+    assert!(page.html.contains("href=\"/resources\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg\""));
 }
