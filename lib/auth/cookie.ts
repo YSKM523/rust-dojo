@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { verifySession, type SessionPayload } from './session';
 
 export const COOKIE_NAME = 'rdsess';
@@ -11,6 +10,12 @@ interface CookieSpec {
   sameSite: 'lax';
   path: string;
   maxAge: number;
+}
+
+export interface CookieRequest {
+  cookies: {
+    get(name: string): { value: string } | undefined;
+  };
 }
 
 export function sessionCookie(value: string, maxAgeSec: number): CookieSpec {
@@ -30,7 +35,7 @@ export function clearCookie(): CookieSpec {
 }
 
 export async function readSession(
-  req: NextRequest,
+  req: CookieRequest,
   secret: string,
 ): Promise<SessionPayload | null> {
   const token = req.cookies.get(COOKIE_NAME)?.value;

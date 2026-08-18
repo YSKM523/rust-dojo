@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" class="h-full antialiased">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <meta name="description" content="调用 Rust Playground 真实编译运行的中文 Rust 后端实战学习平台。">
+    <link rel="icon" href="/favicon.ico" sizes="48x48" type="image/x-icon">
+    <link rel="icon" href="/icon.png" sizes="512x512" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" type="image/png">
+    <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/assets/site.css">
+    <script>try{var t=localStorage.getItem('rustdojo:theme')||'dark';document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}document.documentElement.classList.add('fx-js')</script>
+    <script type="module" src="/assets/js/theme.js"></script>
+    <script type="module" src="/assets/js/logout.js"></script>
+    <script type="module" src="/assets/js/login.js"></script>
+    <script type="module" src="/assets/js/me.js"></script>
+    <script type="module" src="/assets/js/checklist.js"></script>
+    <script type="module" src="/assets/js/progress-badge.js"></script>
+    <script type="module" src="/assets/js/progress-sync.js"></script>
+    <script type="module" src="/assets/js/fx.js"></script>
+    {% block page_scripts %}{% endblock %}
+  </head>
+  <body class="min-h-full flex flex-col bg-bg text-fg">
+    {% include "topbar.html" %}
+    <div class="flex-1">{% block content %}{% endblock %}</div>
+  </body>
+</html>

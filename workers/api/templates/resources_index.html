@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="w-full overflow-hidden bg-bg">
+  <section class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg2">
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <header class="reveal-in grid w-full gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
+        <div class="border-t border-line pt-6">
+          <div class="flex items-center gap-3 text-xs font-black uppercase tracking-[0.24em] text-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-library" aria-hidden="true"><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></svg>
+            FIELD LIBRARY
+          </div>
+          <h1 class="mt-6 max-w-4xl text-5xl font-black leading-none text-fg sm:text-7xl">求职资料库</h1>
+          <p class="mt-6 max-w-3xl text-base leading-8 text-fg2">
+            基于 2026-07 Indeed 加拿大 / 美国岗位调研整理：JD 要什么、面试问什么、写代码时翻什么。
+            每一条能力都接回本站对应的模块与实战项目。
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="/learn" class="inline-flex items-center gap-2 bg-brand px-5 py-3 font-bold text-white transition hover:bg-brand-hover">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
+              按路线开始学
+            </a>
+            <a href="#cheatsheet-title" class="inline-flex items-center gap-2 border border-line bg-panel2 px-5 py-3 font-semibold text-fg transition hover:border-brand">直接看速查表</a>
+          </div>
+        </div>
+        <div class="grid gap-px bg-line shadow-card sm:grid-cols-3 lg:grid-cols-1">
+          <div class="bg-panel p-5"><p class="text-xs font-bold uppercase tracking-[0.16em] text-fg3">条目</p><p class="mt-3 text-4xl font-black text-fg">{{ resource_count }}</p></div>
+          <div class="bg-panel p-5"><p class="text-xs font-bold uppercase tracking-[0.16em] text-fg3">分区</p><p class="mt-3 text-4xl font-black text-fg">{{ group_count }}</p></div>
+          <div class="bg-panel p-5"><p class="text-xs font-bold uppercase tracking-[0.16em] text-fg3">数据来源</p><p class="mt-3 text-xl font-black text-fg">2026-07 JD</p></div>
+        </div>
+      </header>
+    </div>
+  </section>
+
+  {% if !scenarios.is_empty() %}
+  <section class="border-b border-line bg-panel px-4 py-12 sm:px-6 lg:px-8">
+    <div class="w-full">
+      <p class="text-xs font-black uppercase tracking-[0.24em] text-brand">岗位场景 / Scenarios</p>
+      <div class="mt-6 grid gap-px border border-line bg-line md:grid-cols-3">
+        {% for scenario in scenarios %}
+        <article class="bg-bg p-6">
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-fg3">Case {{ scenario.case_number }}</p>
+          <h3 class="mt-4 text-xl font-black leading-snug text-fg">{{ scenario.card.title }}</h3>
+          <p class="mt-3 text-sm leading-6 text-fg2">{{ scenario.card.question }}</p>
+          <div class="mt-5 flex flex-wrap gap-1.5">
+            {% for tag in scenario.card.tags %}<span class="border border-line bg-panel2 px-2 py-0.5 text-xs text-fg3">{{ tag }}</span>{% endfor %}
+          </div>
+          <a href="{{ scenario.href }}" class="mt-6 inline-flex text-sm font-bold text-link hover:underline">去对应模块</a>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% for group_view in groups %}
+  {% if group_view.group.id == "interview" %}
+  <section aria-labelledby="{{ group_view.group.id }}-title" class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg3">
+  {% else %}
+  <section aria-labelledby="{{ group_view.group.id }}-title" class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg2">
+  {% endif %}
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <div class="w-full">
+        <div class="grid gap-6 border-t border-line pt-6 md:grid-cols-[0.72fr_1.28fr] md:items-end">
+          <div>
+            <p class="flex items-center gap-2 text-sm font-black uppercase tracking-[0.22em] text-brand">
+              {% if group_view.group.id == "jd" %}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open" aria-hidden="true"><path d="M12 5v16"></path><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"></path></svg>
+              {% else if group_view.group.id == "interview" %}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text" aria-hidden="true"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+              {% else %}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-terminal" aria-hidden="true"><path d="m7 11 2-2-2-2"></path><path d="M11 13h4"></path><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect></svg>
+              {% endif %}
+              {{ group_view.group.eyebrow }} <span class="text-fg3">{{ group_view.group.items.len() }} 条</span>
+            </p>
+            <h2 id="{{ group_view.group.id }}-title" class="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">{{ group_view.group.title }}</h2>
+          </div>
+          <p class="max-w-2xl text-base leading-8 text-fg2 md:justify-self-end">{{ group_view.group.summary }}</p>
+        </div>
+        <div class="mt-10 grid gap-px bg-line shadow-card md:grid-cols-2">
+          {% for item_view in group_view.items %}
+          {% if item_view.is_template %}
+          <article class="group flex min-w-0 flex-col border border-line shadow-card transition hover:-translate-y-0.5 hover:border-brand bg-[#15181d] p-0 text-[#f4f0e8]">
+            <div class="p-5">
+          {% else %}
+          <article class="group flex min-w-0 flex-col border border-line shadow-card transition hover:-translate-y-0.5 hover:border-brand bg-panel p-5">
+            <div>
+          {% endif %}
+              <div class="flex flex-wrap items-center gap-2 text-xs text-fg3">
+                {% if item_view.is_template %}
+                <span class="border border-white/10 bg-white/8 px-2 py-0.5 text-[#c9c3b8]">{{ item_view.item.category }}</span>
+                <span class="text-[#8f968f]">{{ item_view.item.level }}</span>
+                {% else %}
+                <span class="border border-line bg-panel2 px-2 py-0.5 text-fg2">{{ item_view.item.category }}</span>
+                <span>{{ item_view.item.level }}</span>
+                {% endif %}
+              </div>
+              {% if item_view.featured %}
+                {% if item_view.is_template %}<h3 class="mt-8 text-3xl leading-tight font-black text-[#fffaf0]">{% else %}<h3 class="mt-8 text-3xl leading-tight font-black text-fg">{% endif %}
+              {% else %}
+                {% if item_view.is_template %}<h3 class="mt-4 text-lg leading-6 font-black text-[#fffaf0]">{% else %}<h3 class="mt-4 text-lg leading-6 font-black text-fg">{% endif %}
+              {% endif %}{{ item_view.item.title }}</h3>
+              {% if item_view.is_template %}<p class="mt-3 text-sm leading-6 text-[#c9c3b8]">{% else %}<p class="mt-3 text-sm leading-6 text-fg2">{% endif %}{{ item_view.item.summary }}</p>
+            </div>
+            {% if item_view.is_template %}<pre class="overflow-x-auto border-y border-white/10 bg-[#101217] p-4 text-xs leading-6 text-[#e6e9ef]"><code>{{ item_view.code }}</code></pre>{% endif %}
+            {% if item_view.is_template %}<div class="flex flex-wrap gap-1.5 p-5 pt-4">{% else %}<div class="flex flex-wrap gap-1.5 mt-5">{% endif %}
+              {% if item_view.is_template %}
+                {% for tag in item_view.item.tags %}<span class="border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-[#8f968f]">{{ tag }}</span>{% endfor %}
+              {% else %}
+                {% for tag in item_view.item.tags %}<span class="border border-line bg-panel2 px-2 py-0.5 text-xs text-fg3">{{ tag }}</span>{% endfor %}
+              {% endif %}
+            </div>
+            {% if item_view.is_template %}<div class="px-5 pb-5">{% else %}<div>{% endif %}
+              <div class="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+                {% for link in item_view.links %}<a href="{{ link.href }}" class="text-link hover:underline">{{ link.label }}</a>{% endfor %}
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endfor %}
+</main>
+{% endblock %}

@@ -15,20 +15,27 @@
 - 线上 E2E 已验：prod 判题、OTP 登录（D1 取码）、进度落 D1；双主题 WCAG AA 测试覆盖（app/theme-contrast.test.ts）
 - m7 注意：axum 不在 Playground top-100，练习用等价 handler 形状模型；真 axum 在 p4 项目
 
-## 2026-08-18 Phase A 上线：/api/* 全部由 Rust Worker 服务（双 Worker 拓扑）
+## 2026-08-19 Phase B 收官：全站单 Rust Worker（Next.js 已退役）
 
-**架构**：主 Worker `rust-dojo`（main=`worker-entry.mjs` 薄入口）把 `/api/*` 经 service binding `API` 转发给 **`rust-dojo-api`**（workers-rs/wasm，`workers/api/`），其余路径透传 OpenNext handler。Next 侧 `app/api/**` 路由文件保留但不再接流量（soak 后清理）。会话字节兼容，存量 `rdsess` cookie 无感。
+**线上拓扑**：单 Worker **`rust-dojo`**（workers-rs/wasm），askama SSR 全部页面 + vanilla islands（`islands/`，esbuild esm splitting 共享 chunk）+ Workers Assets（`assets-dist/`）。唯一部署配置 `workers/api/wrangler.jsonc`（name=rust-dojo）。Next/OpenNext/React 已从仓库删除（commit `d400046`）。判题机制未动（浏览器直连 Playground，`lib/rust/judge.ts` 被 islands 零分叉复用）。
 
-**部署（两条命令，都需 Node 22——`export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$PATH"`）**：
-- 主 Worker：`npm run deploy`（只部主 Worker，不会部 API Worker）
-- API Worker：`cd workers/api && npx wrangler deploy`（build 命令内含 `cargo install -q worker-build@0.1.14`——**会把全局 `~/.cargo/bin/worker-build` 降级**，0.1 线是 worker 0.6 的兼容线，与 Cargo.toml 里 `wasm-bindgen = "=0.2.105"` 成对锁定，勿单独升级任一个）
-- secrets（rust-dojo-api 上，与 `.dev.vars` 同值）：SESSION_SECRET / MAIL_API_SECRET / DEEPSEEK_API_KEY
+**部署**：`export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$PATH"; npm run deploy`（= npm run assets && cd workers/api && wrangler deploy）。build 内含 `cargo install -q worker-build@0.1.14`——**会降级全局 worker-build**，与 `wasm-bindgen = "=0.2.105"` 成对锁定勿单独升级。exit 144 非失败。内容改动后先 `node scripts/gen-manifest.mjs`（vitest 有守卫）。
 
-**回滚（一行）**：根 `wrangler.jsonc` 的 `main` 改回 `.open-next/worker.js`、删掉 `services` 里的 `API` 绑定，`npm run deploy`——Next API 路由与全部绑定都还在。
+**secrets 真相**：三枚（SESSION_SECRET/MAIL_API_SECRET/DEEPSEEK_API_KEY）设在 Worker `rust-dojo`，**以 `.dev.vars` 为准**。历史坑：主 Worker 的 SESSION_SECRET 曾是 2026-07 上线时的另一版值（与 .dev.vars 分叉），2026-08-19 单 Worker 化时已同步并用真 cookie 复验。**重设 SESSION_SECRET = 全站 rdsess 失效、所有用户登出**。
 
-**验证工具**：`node scripts/parity-smoke.mjs <baseUrl>`（12 条无副作用断言）；`--against <url2>` 双目标 diff。内容改动后跑 `node scripts/gen-manifest.mjs` 重新生成 `workers/api/manifest.json`（vitest 有守卫，漂移会红）。Rust 测试：`cd workers/api && cargo test`（native，20 条）。
+**回滚三档**：
+- A（秒级，首选）：`npx wrangler rollback <version-id> --name rust-dojo`（B3 末版 entry `5a03de87`）。**前提：Worker `rust-dojo-api` 还活着**（那版 service binding 指向它）——因此 rust-dojo-api 保留至 soak ≥1 周后再删。
+- B（分支级）：`git revert d400046` → `npm install`（装回 Next）→ 旧式 opennextjs 部署。
+- C（页面级 MIGRATED 前缀）：**已不存在**（薄入口随 Task 15 删除）。
 
-**soak 清单（观察 ≥1 周后做清理 commit）**：删 Next 侧 `app/api/**` 与主 Worker 多余绑定；429/502/503 分支线上观察；顺手项：read_session/check_rate_limit 双实现合并、`random_uuid` 空值改显式报错、`"observability": {"enabled": true}`。
+**本地开发**：`npm run dev`（wrangler dev --env-file ../../.dev.vars，secrets 已接线）。测试：`npx vitest run`（174 条）+ `cd workers/api && cargo test`（52 条）+ `PLAYGROUND_TESTS=1 npm run test:soundness`（61 条，打真实 Playground）。
+
+**已知坑位 / backlog**：
+- 详情页尾斜杠（`/learn/m1/` 等）现为 404（Next 曾 308 重定向）；index 页尾斜杠 200 双 URL 无 canonical——SEO 侧如需对外绑域前处理。
+- 全站 `Cache-Control: private, no-store`（页面含 SSR 登录态）——workers.dev 无边缘缓存故零回归；**绑自定义域前必须做匿名可缓存变体**。
+- `lib/` 下死代码清单（auth/cookie、auth/useSession、progress/useProgress、db/d1、mail/send、ai/*——真实现已在 Rust 侧，留作 parity 文档源）；`lib/auth/session.ts` 是活的（gen-session-vectors 依赖）。
+- islands/theme.ts 无单测（E2E 有实证）；raw HTML markdown 口径（Rust 转义 vs react-markdown 丢弃，现内容零命中）。
+- 像素基线：全站与 Next 版 0.00~0.02%（残差全为字体度量/抗锯齿级，已逐一裁决），字体为 fontsource variable 自托管。
 
 ## 2026-08-17 教学层审计 + 加固（已改，未部署）
 审计方式：Claude 与 codex（gpt-5.6-sol, effort high）各自独立通读代码后交叉验证，所有结论都实测核验过。

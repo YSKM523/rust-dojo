@@ -13,10 +13,6 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
 /build
 
@@ -38,12 +34,13 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
-# cloudflare / opennext
-.open-next/
+# cloudflare
 .wrangler/
 .dev.vars
 
 # 可视化 brainstorm 伴侣
 .superpowers/
+
+# Phase B 静态资源产物（npm run assets 生成）
+/assets-dist/

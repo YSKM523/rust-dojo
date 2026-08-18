@@ -6,16 +6,21 @@
 
 ## 技术栈
 
-Next.js 16 (App Router) · TypeScript · Tailwind v4 · CodeMirror 6 · Vitest · Cloudflare Workers (OpenNext) · D1
+Rust Worker（workers-rs）· Askama SSR · Vanilla TypeScript islands · Tailwind v4 · CodeMirror 6 · Vitest · Cloudflare Workers · D1
 
 ## 本地开发
 
 ```bash
 npm install
 npm run dev
-npm test
+npm run deploy
+npx vitest run
 npx tsc --noEmit
+npx eslint .
+cd workers/api && cargo test
 ```
+
+`npm run dev` 从仓库根目录的 `.dev.vars` 加载本地 secrets，并启动 `workers/api` 中的单 Rust Worker。`npm run deploy` 先构建静态 assets，再部署同一个 Worker。
 
 ## 内容契约
 
