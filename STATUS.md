@@ -15,6 +15,21 @@
 - 线上 E2E 已验：prod 判题、OTP 登录（D1 取码）、进度落 D1；双主题 WCAG AA 测试覆盖（app/theme-contrast.test.ts）
 - m7 注意：axum 不在 Playground top-100，练习用等价 handler 形状模型；真 axum 在 p4 项目
 
+## 2026-08-18 Phase A 上线：/api/* 全部由 Rust Worker 服务（双 Worker 拓扑）
+
+**架构**：主 Worker `rust-dojo`（main=`worker-entry.mjs` 薄入口）把 `/api/*` 经 service binding `API` 转发给 **`rust-dojo-api`**（workers-rs/wasm，`workers/api/`），其余路径透传 OpenNext handler。Next 侧 `app/api/**` 路由文件保留但不再接流量（soak 后清理）。会话字节兼容，存量 `rdsess` cookie 无感。
+
+**部署（两条命令，都需 Node 22——`export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$PATH"`）**：
+- 主 Worker：`npm run deploy`（只部主 Worker，不会部 API Worker）
+- API Worker：`cd workers/api && npx wrangler deploy`（build 命令内含 `cargo install -q worker-build@0.1.14`——**会把全局 `~/.cargo/bin/worker-build` 降级**，0.1 线是 worker 0.6 的兼容线，与 Cargo.toml 里 `wasm-bindgen = "=0.2.105"` 成对锁定，勿单独升级任一个）
+- secrets（rust-dojo-api 上，与 `.dev.vars` 同值）：SESSION_SECRET / MAIL_API_SECRET / DEEPSEEK_API_KEY
+
+**回滚（一行）**：根 `wrangler.jsonc` 的 `main` 改回 `.open-next/worker.js`、删掉 `services` 里的 `API` 绑定，`npm run deploy`——Next API 路由与全部绑定都还在。
+
+**验证工具**：`node scripts/parity-smoke.mjs <baseUrl>`（12 条无副作用断言）；`--against <url2>` 双目标 diff。内容改动后跑 `node scripts/gen-manifest.mjs` 重新生成 `workers/api/manifest.json`（vitest 有守卫，漂移会红）。Rust 测试：`cd workers/api && cargo test`（native，20 条）。
+
+**soak 清单（观察 ≥1 周后做清理 commit）**：删 Next 侧 `app/api/**` 与主 Worker 多余绑定；429/502/503 分支线上观察；顺手项：read_session/check_rate_limit 双实现合并、`random_uuid` 空值改显式报错、`"observability": {"enabled": true}`。
+
 ## 2026-08-17 教学层审计 + 加固（已改，未部署）
 审计方式：Claude 与 codex（gpt-5.6-sol, effort high）各自独立通读代码后交叉验证，所有结论都实测核验过。
 

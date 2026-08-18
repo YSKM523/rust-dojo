@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rust-dojo",
-  "main": ".open-next/worker.js",
+  "main": "worker-entry.mjs",
   "compatibility_date": "2025-09-23",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -22,6 +22,7 @@
     }
   ],
   "services": [
-    { "binding": "MAIL", "service": "lakebbs-mail" }
+    { "binding": "MAIL", "service": "lakebbs-mail" },
+    { "binding": "API", "service": "rust-dojo-api" }
   ]
 }
