@@ -51,3 +51,38 @@
   未纳入本任务提交；本任务严格按路径显式暂存。
 
 DONE
+
+# Task 13 审阅修复
+
+## 修复内容
+
+- `exercise_detail.html` 的 rotate-ccw 第一条 path 已按仓库 `lucide-react@1.27.0` 真值改为 `M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8`；`content.rs` 使用包含两条 path 的完整 SVG 字面量守卫。
+- `escape_inline_json_for_script` 改为对序列化结果执行 `.replace('<', "\\u003c")`。既有 `</script><p>` 测试同步到统一转义结果，并新增 `<!-- <script` 输入，断言输出没有裸 `<`。
+- `content.rs` 新增接线级测试：渲染 `/exercise/m1-01`、提取 `#exercise-data` 文本并断言没有裸 `<`。
+- island 协议和客户端代码未改动。
+
+## TDD 证据
+
+- helper RED：`cargo test inline_json_contains_no_bare_less_than_characters` 因旧实现仍输出裸 `<` 失败。
+- SVG RED：`cargo test --test content exercise_page_renders_title_prompt_data_island_editor_and_navigation` 因模板仍含旧 path 失败。
+- `/exercise/m1-01` 接线测试在 RED 阶段即通过，因为当前该题序列化字段本身不含 `<`；该断言仍作为将来内容或接线变化的路由级守卫。
+- 最小实现后，`cargo test inline_json`、SVG 聚焦测试和接线测试全部通过。
+
+## 最终验证
+
+- `cd workers/api && cargo test`：22 unit、30 integration、0 doc failure。
+- `cargo clippy --target wasm32-unknown-unknown --all-targets`：exit 0，无 error。
+- `rustfmt --edition 2021 --check src/pages/exercise.rs` 与 `git diff --check`：通过。
+- `worker-build --release`：wasm release 构建及 wasm-opt 成功。
+- Wrangler 4.100.0 本地 Worker：`GET /exercise/m1-01` 返回 200；为避开仓库 build hook 重复执行 `cargo install`，临时配置只移除 build hook，并沿用刚生成的 Worker 入口、assets 与全部绑定，仓库配置未改。
+- `curl | node -e` 从真实响应抽取 `#exercise-data` 并执行 `JSON.parse`，证据：
+
+```text
+HTTP_STATUS=200
+{"jsonParse":"ok","id":"m1-01","judgeMode":"stdout","bareLessThan":false,"canonicalRotatePath":true}
+```
+
+- 全仓 `cargo fmt --check` 仍会报告本任务之外的既有格式差异：`src/core/ai.rs`、`code.rs`、`mod.rs`、`ratelimit.rs`、`session.rs`；这些文件未改动、未暂存。
+- 工作区既有 `.superpowers/sdd/2026-08-18-rust-ssr-phase-b/task-6-report.md` 修改保持原样，不纳入本提交。
+
+DONE

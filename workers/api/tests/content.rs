@@ -175,6 +175,9 @@ fn exercise_page_renders_title_prompt_data_island_editor_and_navigation() {
     assert!(page
         .html
         .contains("<span data-exercise-run-label>运行</span>"));
+    assert!(page.html.contains(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>"#
+    ));
     assert!(page.html.contains("href=\"/learn/m1\""));
     assert!(page.html.contains("href=\"/exercise/m1-02\""));
     assert!(page.html.contains("第 1 / 9 题 · 回模块"));
@@ -185,6 +188,23 @@ fn exercise_page_renders_title_prompt_data_island_editor_and_navigation() {
     assert!(page
         .html
         .contains("<script type=\"module\" src=\"/assets/js/exercise.js\"></script>"));
+}
+
+#[test]
+fn exercise_page_data_island_contains_no_bare_less_than_characters() {
+    let page =
+        render_exercise_page("/exercise/m1-01", None).expect("exercise page renders a response");
+    let marker = "<script type=\"application/json\" id=\"exercise-data\">";
+    let json = page
+        .html
+        .split_once(marker)
+        .expect("exercise data script exists")
+        .1
+        .split_once("</script>")
+        .expect("exercise data script closes")
+        .0;
+
+    assert!(!json.contains('<'));
 }
 
 #[test]

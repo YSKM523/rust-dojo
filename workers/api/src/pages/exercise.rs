@@ -117,7 +117,7 @@ pub fn render_page(path: &str, user_email: Option<&str>) -> askama::Result<Rende
 }
 
 fn escape_inline_json_for_script(json: &str) -> String {
-    json.replace("</", "<\\/")
+    json.replace('<', "\\u003c")
 }
 
 #[cfg(test)]
@@ -128,7 +128,14 @@ mod tests {
     fn inline_json_cannot_close_its_script_element() {
         assert_eq!(
             escape_inline_json_for_script(r#"{"code":"</script><p>"}"#),
-            r#"{"code":"<\/script><p>"}"#
+            r#"{"code":"\u003c/script>\u003cp>"}"#
         );
+    }
+
+    #[test]
+    fn inline_json_contains_no_bare_less_than_characters() {
+        let escaped = escape_inline_json_for_script(r#"{"code":"<!-- <script"}"#);
+
+        assert!(!escaped.contains('<'));
     }
 }
