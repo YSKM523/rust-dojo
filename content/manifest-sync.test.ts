@@ -31,12 +31,21 @@ describe('workers/api/manifest.json 与内容同步', () => {
 
 // workers/api/site-content.json 是同一个生成脚本的第二产物，驱动 Phase B 的 Rust SSR 页面。
 // 它必须与 TS 内容逐字段一致，且**绝不能**带上答案字段——这条测试同时守漂移和守泄漏。
+//
+// 期望值一律**从内容对象整体派生**（排除式：只删点名的答案键），不手工枚举字段白名单。
+// 手工白名单会造成假绿：内容模型新增一个合法公开字段时，生成器和测试若各抄一份白名单，
+// 产物漏掉该字段而测试依旧通过。这里 toEqual 直接比整个对象，新字段漏了就会红。
 describe('workers/api/site-content.json 与内容同步', () => {
   const ANSWER_KEYS = ['solutionCode', 'hiddenTests', 'assertSource'] as const;
 
-  const siteContent = JSON.parse(
-    readFileSync(join(process.cwd(), 'workers/api/site-content.json'), 'utf8'),
-  ) as {
+  const omitAnswers = (exercise: (typeof allExercises)[number]) => {
+    const copy: Record<string, unknown> = { ...exercise };
+    for (const key of ANSWER_KEYS) delete copy[key];
+    return copy;
+  };
+
+  const raw = readFileSync(join(process.cwd(), 'workers/api/site-content.json'), 'utf8');
+  const siteContent = JSON.parse(raw) as {
     modules: unknown[];
     exercises: Record<string, unknown>[];
     projects: unknown[];
@@ -59,97 +68,29 @@ describe('workers/api/site-content.json 与内容同步', () => {
       }
     }
     // 整份文件里也不该出现这三个键（防未来嵌套结构把答案又带回来）。
-    const raw = readFileSync(join(process.cwd(), 'workers/api/site-content.json'), 'utf8');
     for (const key of ANSWER_KEYS) {
       expect(raw).not.toContain(`"${key}"`);
     }
   });
 
-  it('modules 与内容一致（含 lesson 全文）', () => {
-    expect(siteContent.modules).toEqual(
-      allModules.map((m) => ({
-        id: m.id,
-        order: m.order,
-        title: m.title,
-        tierKey: m.tierKey,
-        tierLabel: m.tierLabel,
-        summary: m.summary,
-        lesson: m.lesson,
-      })),
-    );
+  it('modules 与内容逐字段一致（含 lesson 全文与任何新增字段）', () => {
+    expect(siteContent.modules).toEqual(allModules);
   });
 
-  it('exercises 与内容一致（除答案字段外全字段）', () => {
-    expect(siteContent.exercises).toEqual(
-      allExercises.map((e) => ({
-        id: e.id,
-        moduleId: e.moduleId,
-        title: e.title,
-        difficulty: e.difficulty,
-        prompt: e.prompt,
-        starterCode: e.starterCode,
-        judgeMode: e.judgeMode,
-        expectedStdout: e.expectedStdout,
-        crateType: e.crateType,
-        hints: e.hints,
-      })),
-    );
+  it('exercises 与内容逐字段一致（仅剔除三个答案字段）', () => {
+    expect(siteContent.exercises).toEqual(allExercises.map(omitAnswers));
   });
 
-  it('projects 与内容一致（含 brief 与清单项）', () => {
-    expect(siteContent.projects).toEqual(
-      allProjects.map((p) => ({
-        id: p.id,
-        afterModuleId: p.afterModuleId,
-        title: p.title,
-        summary: p.summary,
-        brief: p.brief,
-        items: p.items.map((i) => ({
-          id: i.id,
-          text: i.text,
-          testCommand: i.testCommand,
-          hint: i.hint,
-        })),
-      })),
-    );
+  it('projects 与内容逐字段一致（含 brief 与清单项）', () => {
+    expect(siteContent.projects).toEqual(allProjects);
   });
 
-  it('resources 分组与条目全字段一致', () => {
-    expect(siteContent.resources).toEqual(
-      resourceGroups.map((g) => ({
-        id: g.id,
-        title: g.title,
-        eyebrow: g.eyebrow,
-        summary: g.summary,
-        items: g.items.map((i) => ({
-          id: i.id,
-          kind: i.kind,
-          title: i.title,
-          summary: i.summary,
-          category: i.category,
-          level: i.level,
-          tags: i.tags,
-          moduleId: i.moduleId,
-          exerciseId: i.exerciseId,
-          projectId: i.projectId,
-          readingTime: i.readingTime,
-          body: i.body,
-          code: i.code,
-        })),
-      })),
-    );
+  it('resources 分组与条目逐字段一致', () => {
+    expect(siteContent.resources).toEqual(resourceGroups);
   });
 
   it('featuredResourceIds 与 scenarioCards 与内容一致', () => {
     expect(siteContent.featuredResourceIds).toEqual(featuredResources.map((i) => i.id));
-    expect(siteContent.scenarioCards).toEqual(
-      scenarioCards.map((c) => ({
-        title: c.title,
-        question: c.question,
-        moduleId: c.moduleId,
-        exerciseId: c.exerciseId,
-        tags: c.tags,
-      })),
-    );
+    expect(siteContent.scenarioCards).toEqual(scenarioCards);
   });
 });

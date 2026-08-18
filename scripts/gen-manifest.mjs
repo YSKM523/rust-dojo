@@ -25,8 +25,14 @@ const { allExercises } = await loadModule('content/exercises/index.ts');
 const { allProjects } = await loadModule('content/projects.ts');
 const { resourceGroups, featuredResources, scenarioCards } = await loadModule('content/resources.ts');
 
-// 丢掉值为 undefined 的可选键，让产物与 JSON.stringify 语义一致、diff 稳定。
-const compact = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+// 排除式变换：整体保留内容对象的全部字段，只显式删掉点名的键。
+// **不要改成挑选式白名单**——内容模型将来新增合法公开字段时，白名单会静默漏掉它，
+// 而守卫测试若也照抄同一份白名单就会一起漏，产物缺字段测试却是绿的（假绿）。
+const omit = (obj, ...keys) => {
+  const copy = { ...obj };
+  for (const key of keys) delete copy[key];
+  return copy;
+};
 
 // ---- 1. manifest.json（Phase A 契约，逐字不变）----------------------------
 const exerciseIds = allExercises.map((e) => e.id);
@@ -44,70 +50,16 @@ console.log(`manifest: ${manifest.progressIds.length} progressIds (${exerciseIds
 // ---- 2. site-content.json（Phase B SSR 内容）------------------------------
 // 练习**必须**剔除 solutionCode / hiddenTests / assertSource 三个答案字段：
 // 这份 JSON 会被编进 Rust worker 并驱动页面渲染，答案不进入 SSR 面。
+// 其余内容按原对象整体透传（含将来新增的字段），只有这里点名的键会被删。
+const EXERCISE_ANSWER_KEYS = ['solutionCode', 'hiddenTests', 'assertSource'];
+
 const siteContent = {
-  modules: allModules.map((m) => compact({
-    id: m.id,
-    order: m.order,
-    title: m.title,
-    tierKey: m.tierKey,
-    tierLabel: m.tierLabel,
-    summary: m.summary,
-    lesson: m.lesson,
-  })),
-  exercises: allExercises.map((e) => compact({
-    id: e.id,
-    moduleId: e.moduleId,
-    title: e.title,
-    difficulty: e.difficulty,
-    prompt: e.prompt,
-    starterCode: e.starterCode,
-    judgeMode: e.judgeMode,
-    expectedStdout: e.expectedStdout,
-    crateType: e.crateType,
-    hints: e.hints,
-  })),
-  projects: allProjects.map((p) => compact({
-    id: p.id,
-    afterModuleId: p.afterModuleId,
-    title: p.title,
-    summary: p.summary,
-    brief: p.brief,
-    items: p.items.map((i) => compact({
-      id: i.id,
-      text: i.text,
-      testCommand: i.testCommand,
-      hint: i.hint,
-    })),
-  })),
-  resources: resourceGroups.map((g) => compact({
-    id: g.id,
-    title: g.title,
-    eyebrow: g.eyebrow,
-    summary: g.summary,
-    items: g.items.map((i) => compact({
-      id: i.id,
-      kind: i.kind,
-      title: i.title,
-      summary: i.summary,
-      category: i.category,
-      level: i.level,
-      tags: i.tags,
-      moduleId: i.moduleId,
-      exerciseId: i.exerciseId,
-      projectId: i.projectId,
-      readingTime: i.readingTime,
-      body: i.body,
-      code: i.code,
-    })),
-  })),
+  modules: allModules.map((m) => ({ ...m })),
+  exercises: allExercises.map((e) => omit(e, ...EXERCISE_ANSWER_KEYS)),
+  projects: allProjects.map((p) => ({ ...p, items: p.items.map((i) => ({ ...i })) })),
+  resources: resourceGroups.map((g) => ({ ...g, items: g.items.map((i) => ({ ...i })) })),
   featuredResourceIds: featuredResources.map((i) => i.id),
-  scenarioCards: scenarioCards.map((c) => compact({
-    title: c.title,
-    question: c.question,
-    moduleId: c.moduleId,
-    exerciseId: c.exerciseId,
-    tags: c.tags,
-  })),
+  scenarioCards: scenarioCards.map((c) => ({ ...c })),
 };
 
 const siteContentOut = path.join(ROOT, 'workers/api/site-content.json');
