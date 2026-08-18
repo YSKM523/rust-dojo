@@ -48,14 +48,27 @@ fs.writeFileSync(manifestOut, JSON.stringify(manifest, null, 1) + '\n');
 console.log(`manifest: ${manifest.progressIds.length} progressIds (${exerciseIds.length} exercises + ${checklistIds.length} checklist), ${Object.keys(manifest.exercises).length} exercise entries`);
 
 // ---- 2. site-content.json（Phase B SSR 内容）------------------------------
-// 练习**必须**剔除 solutionCode / hiddenTests / assertSource 三个答案字段：
-// 这份 JSON 会被编进 Rust worker 并驱动页面渲染，答案不进入 SSR 面。
-// 其余内容按原对象整体透传（含将来新增的字段），只有这里点名的键会被删。
-const EXERCISE_ANSWER_KEYS = ['solutionCode', 'hiddenTests', 'assertSource'];
+// 练习**必须**剔除 solutionCode；判题字段统一收进 judge 子对象，供 Rust SSR
+// 按 island 协议挑选字段内联。其余内容按原对象整体透传（含将来新增的字段），
+// 只有这里点名的键会被移动或删除。
+const EXERCISE_JUDGE_KEYS = [
+  'judgeMode',
+  'expectedStdout',
+  'hiddenTests',
+  'assertSource',
+  'crateType',
+];
+
+const withNestedJudge = (exercise) => ({
+  ...omit(exercise, 'solutionCode', ...EXERCISE_JUDGE_KEYS),
+  judge: Object.fromEntries(
+    EXERCISE_JUDGE_KEYS.flatMap((key) => exercise[key] === undefined ? [] : [[key, exercise[key]]]),
+  ),
+});
 
 const siteContent = {
   modules: allModules.map((m) => ({ ...m })),
-  exercises: allExercises.map((e) => omit(e, ...EXERCISE_ANSWER_KEYS)),
+  exercises: allExercises.map(withNestedJudge),
   projects: allProjects.map((p) => ({ ...p, items: p.items.map((i) => ({ ...i })) })),
   resources: resourceGroups.map((g) => ({ ...g, items: g.items.map((i) => ({ ...i })) })),
   featuredResourceIds: featuredResources.map((i) => i.id),

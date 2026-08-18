@@ -30,17 +30,28 @@ describe('workers/api/manifest.json 与内容同步', () => {
 });
 
 // workers/api/site-content.json 是同一个生成脚本的第二产物，驱动 Phase B 的 Rust SSR 页面。
-// 它必须与 TS 内容逐字段一致，且**绝不能**带上答案字段——这条测试同时守漂移和守泄漏。
+// 它必须与 TS 内容逐字段一致，且 solutionCode **绝不能**进入产物——这条测试同时守漂移和守泄漏。
 //
 // 期望值一律**从内容对象整体派生**（排除式：只删点名的答案键），不手工枚举字段白名单。
 // 手工白名单会造成假绿：内容模型新增一个合法公开字段时，生成器和测试若各抄一份白名单，
 // 产物漏掉该字段而测试依旧通过。这里 toEqual 直接比整个对象，新字段漏了就会红。
 describe('workers/api/site-content.json 与内容同步', () => {
-  const ANSWER_KEYS = ['solutionCode', 'hiddenTests', 'assertSource'] as const;
+  const JUDGE_KEYS = [
+    'judgeMode',
+    'expectedStdout',
+    'hiddenTests',
+    'assertSource',
+    'crateType',
+  ] as const;
 
-  const omitAnswers = (exercise: (typeof allExercises)[number]) => {
+  const withNestedJudge = (exercise: (typeof allExercises)[number]) => {
     const copy: Record<string, unknown> = { ...exercise };
-    for (const key of ANSWER_KEYS) delete copy[key];
+    delete copy.solutionCode;
+    const judge = Object.fromEntries(
+      JUDGE_KEYS.flatMap((key) => exercise[key] === undefined ? [] : [[key, exercise[key]]]),
+    );
+    for (const key of JUDGE_KEYS) delete copy[key];
+    copy.judge = judge;
     return copy;
   };
 
@@ -54,31 +65,32 @@ describe('workers/api/site-content.json 与内容同步', () => {
     scenarioCards: unknown[];
   };
 
-  it('exercises 条目不含 solutionCode / hiddenTests / assertSource（防答案泄漏）', () => {
-    // 内容侧确实有这三个字段，否则这条断言等于空跑。
+  it('exercises 条目都有 judge 子对象，顶层不留 judge 字段，且 solutionCode 不泄漏', () => {
+    // 内容侧确实有答案与判题字段，否则这些断言等于空跑。
     expect(allExercises.some((e) => e.solutionCode !== undefined)).toBe(true);
     expect(allExercises.some((e) => e.hiddenTests !== undefined)).toBe(true);
     expect(allExercises.some((e) => e.assertSource !== undefined)).toBe(true);
 
     expect(siteContent.exercises).toHaveLength(allExercises.length);
     for (const entry of siteContent.exercises) {
-      for (const key of ANSWER_KEYS) {
+      expect(entry.judge).toBeTypeOf('object');
+      expect(entry.judge).not.toBeNull();
+      expect(Object.keys(entry)).not.toContain('solutionCode');
+      expect(entry.solutionCode).toBeUndefined();
+      for (const key of JUDGE_KEYS) {
         expect(Object.keys(entry)).not.toContain(key);
         expect(entry[key]).toBeUndefined();
       }
     }
-    // 整份文件里也不该出现这三个键（防未来嵌套结构把答案又带回来）。
-    for (const key of ANSWER_KEYS) {
-      expect(raw).not.toContain(`"${key}"`);
-    }
+    expect(raw).not.toContain('"solutionCode"');
   });
 
   it('modules 与内容逐字段一致（含 lesson 全文与任何新增字段）', () => {
     expect(siteContent.modules).toEqual(allModules);
   });
 
-  it('exercises 与内容逐字段一致（仅剔除三个答案字段）', () => {
-    expect(siteContent.exercises).toEqual(allExercises.map(omitAnswers));
+  it('exercises 与内容逐字段一致（仅剔除 solutionCode 并收拢 judge）', () => {
+    expect(siteContent.exercises).toEqual(allExercises.map(withNestedJudge));
   });
 
   it('projects 与内容逐字段一致（含 brief 与清单项）', () => {

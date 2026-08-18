@@ -1,4 +1,7 @@
 use rust_dojo_api::pages::content::{render_markdown, site_content};
+use rust_dojo_api::pages::exercise::{
+    render_detail as render_exercise_detail, render_page as render_exercise_page,
+};
 use rust_dojo_api::pages::home::render_page as render_home_page;
 use rust_dojo_api::pages::learn::{
     render_detail as render_learn_detail, render_index as render_learn_index,
@@ -106,6 +109,37 @@ fn generated_site_content_deserializes_with_all_modules() {
 }
 
 #[test]
+fn generated_site_content_deserializes_nested_exercise_judge_data() {
+    let content = site_content();
+    let stdout_exercise = content
+        .exercises
+        .iter()
+        .find(|exercise| exercise.id == "m1-01")
+        .expect("known stdout exercise exists");
+    let tests_exercise = content
+        .exercises
+        .iter()
+        .find(|exercise| exercise.id == "m1-08")
+        .expect("known tests exercise exists");
+
+    assert_eq!(stdout_exercise.judge.judge_mode, "stdout");
+    assert!(stdout_exercise
+        .judge
+        .expected_stdout
+        .as_deref()
+        .expect("stdout exercise has expected output")
+        .contains("Rust 道场"));
+    assert_eq!(tests_exercise.judge.judge_mode, "tests");
+    assert_eq!(tests_exercise.judge.crate_type.as_deref(), Some("lib"));
+    assert!(tests_exercise
+        .judge
+        .hidden_tests
+        .as_deref()
+        .expect("tests exercise has hidden tests")
+        .contains("takes_word_before_first_space"));
+}
+
+#[test]
 fn generated_site_content_pre_renders_resource_markdown() {
     let resource = site_content()
         .resources
@@ -119,6 +153,89 @@ fn generated_site_content_pre_renders_resource_markdown() {
         .as_deref()
         .expect("resource body is pre-rendered")
         .contains("<h2>JD 里长什么样</h2>"));
+}
+
+#[test]
+fn exercise_page_renders_title_prompt_data_island_editor_and_navigation() {
+    let page =
+        render_exercise_page("/exercise/m1-01", None).expect("exercise page renders a response");
+
+    assert_eq!(page.status, 200);
+    assert!(page.html.contains(
+        "<h1 class=\"mt-2 text-4xl font-black leading-tight text-fg\">println! 与格式化占位符</h1>"
+    ));
+    assert!(page.html.contains("<h3>打印你的第一行 Rust</h3>"));
+    assert!(page
+        .html
+        .contains("<script type=\"application/json\" id=\"exercise-data\">"));
+    assert!(page.html.contains("data-island=\"exercise\""));
+    assert!(page.html.contains(
+        "<div class=\"cm-theme-dark\" aria-label=\"Rust 代码编辑器\" data-exercise-editor></div>"
+    ));
+    assert!(page
+        .html
+        .contains("<span data-exercise-run-label>运行</span>"));
+    assert!(page.html.contains("href=\"/learn/m1\""));
+    assert!(page.html.contains("href=\"/exercise/m1-02\""));
+    assert!(page.html.contains("第 1 / 9 题 · 回模块"));
+    assert!(page.html.contains("data-exercise-ai"));
+    assert!(!page.html.contains("data-exercise-dynamic"));
+    assert!(!page.html.contains("solutionCode"));
+    assert!(page.html.contains("href=\"/learn\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+    assert!(page
+        .html
+        .contains("<script type=\"module\" src=\"/assets/js/exercise.js\"></script>"));
+}
+
+#[test]
+fn exercise_data_json_uses_only_the_island_protocol_fields() {
+    let html = render_exercise_detail("m1-08", None)
+        .expect("exercise detail lookup succeeds")
+        .expect("known tests exercise exists");
+    let marker = "<script type=\"application/json\" id=\"exercise-data\">";
+    let json = html
+        .split_once(marker)
+        .expect("exercise data script exists")
+        .1
+        .split_once("</script>")
+        .expect("exercise data script closes")
+        .0;
+    let data: serde_json::Value =
+        serde_json::from_str(json).expect("exercise data is valid inline JSON");
+
+    assert_eq!(data["id"], "m1-08");
+    assert_eq!(data["judgeMode"], "tests");
+    assert_eq!(data["crateType"], "lib");
+    assert!(data["starterCode"]
+        .as_str()
+        .is_some_and(|code| !code.is_empty()));
+    assert!(data["hiddenTests"]
+        .as_str()
+        .is_some_and(|tests| tests.contains("takes_word_before_first_space")));
+    assert_eq!(
+        data.as_object()
+            .expect("exercise data is an object")
+            .keys()
+            .cloned()
+            .collect::<std::collections::BTreeSet<_>>(),
+        ["crateType", "hiddenTests", "id", "judgeMode", "starterCode"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect()
+    );
+    assert!(!json.contains("solutionCode"));
+}
+
+#[test]
+fn missing_exercise_and_duplicated_prefix_render_html_not_found() {
+    for path in ["/exercise/nope", "/exercise//exercise/m1-01"] {
+        let page = render_exercise_page(path, None).expect("missing exercise renders a response");
+
+        assert_eq!(page.status, 404);
+        assert!(page.html.contains("页面不存在"));
+        assert!(page.html.contains("<html lang=\"zh-CN\""));
+        assert!(!page.html.contains("data-island=\"exercise\""));
+    }
 }
 
 #[test]
@@ -154,6 +271,7 @@ fn resources_index_renders_the_page_shell_and_group_content() {
         "<link rel=\"apple-touch-icon\" href=\"/apple-icon.png\" sizes=\"180x180\" type=\"image/png\">"
     ));
     assert!(html.contains("<script type=\"module\" src=\"/assets/js/progress-sync.js\"></script>"));
+    assert!(!html.contains("/assets/js/exercise.js"));
     assert!(html.contains("求职资料库"));
     assert!(html.contains("JD 能力对照清单"));
     assert!(html.contains("href=\"/resources\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));

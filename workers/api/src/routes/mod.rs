@@ -8,9 +8,10 @@ use crate::pages::{self, RenderedPage};
 
 type PageHandler = fn(&str, Option<&str>) -> askama::Result<RenderedPage>;
 
-const PAGE_ROUTES: [(&str, PageHandler); 6] = [
+const PAGE_ROUTES: [(&str, PageHandler); 7] = [
     ("/login", pages::login::render_page),
     ("/me", pages::me::render_page),
+    ("/exercise", pages::exercise::render_page),
     ("/learn", pages::learn::render_page),
     ("/project/", pages::project::render_page),
     ("/resources", pages::resources::render_page),

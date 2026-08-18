@@ -36,6 +36,28 @@ pub struct Exercise {
     pub module_id: String,
     pub title: String,
     pub difficulty: u8,
+    pub prompt: String,
+    #[serde(skip)]
+    pub prompt_html: String,
+    #[serde(rename = "starterCode")]
+    pub starter_code: String,
+    #[serde(default)]
+    pub hints: Vec<String>,
+    pub judge: ExerciseJudge,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ExerciseJudge {
+    #[serde(rename = "judgeMode")]
+    pub judge_mode: String,
+    #[serde(rename = "expectedStdout")]
+    pub expected_stdout: Option<String>,
+    #[serde(rename = "hiddenTests")]
+    pub hidden_tests: Option<String>,
+    #[serde(rename = "assertSource")]
+    pub assert_source: Option<String>,
+    #[serde(rename = "crateType")]
+    pub crate_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -110,6 +132,9 @@ pub fn site_content() -> &'static SiteContent {
                 .expect("workers/api/site-content.json is valid");
         for module in &mut content.modules {
             module.lesson_html = render_markdown(&module.lesson);
+        }
+        for exercise in &mut content.exercises {
+            exercise.prompt_html = render_markdown(&exercise.prompt);
         }
         for project in &mut content.projects {
             project.brief_html = render_markdown(&project.brief);
