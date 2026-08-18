@@ -3,7 +3,7 @@
 // 用法：node scripts/parity-smoke.mjs http://localhost:8788
 //       node scripts/parity-smoke.mjs http://localhost:8788 --against https://rust-dojo.pp-account.workers.dev
 //
-// 单目标模式：逐条断言 status / body 深比较 / error 字符串全等 / clearsCookie。
+// 单目标模式：逐条断言 status / body 深比较 / error 字符串全等 / clearsCookie（rdsess 的 Max-Age 严格为 0）。
 // --against 模式：对两个目标发同样的请求并 diff——status、排序后的 JSON 键集合、
 //                 error 字符串、Set-Cookie 的 (HttpOnly, Secure, SameSite, Path, Max-Age) 五属性。
 // 任何 FAIL → 退出码 1。
@@ -37,29 +37,35 @@ function usage() {
 
 function parseArgs(argv) {
   const positional = [];
-  let against = null;
+  let against = '';
+  let sawAgainst = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '-h' || arg === '--help') {
       usage();
       process.exit(0);
     } else if (arg === '--against') {
-      against = argv[++i];
-      if (!against) {
-        usage();
-        process.exit(2);
-      }
+      against = argv[++i] ?? '';
+      sawAgainst = true;
     } else if (arg.startsWith('--against=')) {
       against = arg.slice('--against='.length);
+      sawAgainst = true;
     } else {
       positional.push(arg);
     }
+  }
+  // 传了 --against 但值为空（CI 里 `--against=$VAR` 而 VAR 未设）必须报错退出，
+  // 绝不能静默降级成单目标模式——那会让「没在 diff」看起来像 PASS。
+  if (sawAgainst && against.trim() === '') {
+    console.error('--against 需要一个非空的 baseUrl');
+    usage();
+    process.exit(2);
   }
   if (positional.length !== 1) {
     usage();
     process.exit(2);
   }
-  return { base: normalizeBase(positional[0]), against: against ? normalizeBase(against) : null };
+  return { base: normalizeBase(positional[0]), against: sawAgainst ? normalizeBase(against.trim()) : null };
 }
 
 function normalizeBase(raw) {
@@ -172,14 +178,20 @@ function parseSetCookie(line) {
   return { name, value, attrs };
 }
 
+function hasAttr(cookie, name) {
+  return Object.prototype.hasOwnProperty.call(cookie.attrs, name);
+}
+
 // 五属性指纹；SameSite 归一化成小写（Lax / lax 语义相同，不算 parity 差异）。
 function cookieFingerprint(setCookies) {
   return setCookies
     .map(parseSetCookie)
     .map((c) => ({
       name: c.name,
-      HttpOnly: c.attrs.httponly === true,
-      Secure: c.attrs.secure === true,
+      // 按属性键「是否出现」判断，不看值：`HttpOnly=x` 这类非规范写法浏览器同样视为置位，
+      // 用 === true 比会把它当成缺失，从而在 diff 里造出假差异。
+      HttpOnly: hasAttr(c, 'httponly'),
+      Secure: hasAttr(c, 'secure'),
       SameSite: typeof c.attrs.samesite === 'string' ? c.attrs.samesite.toLowerCase() : null,
       Path: typeof c.attrs.path === 'string' ? c.attrs.path : null,
       'Max-Age': typeof c.attrs['max-age'] === 'string' ? Number(c.attrs['max-age']) : null,
@@ -244,18 +256,12 @@ function assertCase(testCase, res) {
         `clearsCookie: set-cookie 里没有 ${COOKIE_NAME}=（实际 ${res.setCookies.length ? res.setCookies.join(' | ') : '无 set-cookie'}）`,
       );
     } else {
-      const cleared = cookies.some((c) => {
-        const maxAge = c.attrs['max-age'];
-        if (typeof maxAge === 'string' && Number.isFinite(Number(maxAge)) && Number(maxAge) <= 0) return true;
-        const expires = c.attrs.expires;
-        if (typeof expires === 'string') {
-          const t = Date.parse(expires);
-          if (Number.isFinite(t) && t <= Date.now()) return true;
-        }
-        return false;
-      });
+      // 契约收紧：Max-Age 属性值必须严格等于字符串 "0"。
+      // 不接受 Number() 宽松转换（`Max-Age=-1`、`Max-Age=` 都会变成 <= 0 而误报 PASS），
+      // 也不接受用过去的 Expires 顶替——清 session cookie 的唯一合法写法就是 Max-Age=0。
+      const cleared = cookies.some((c) => c.attrs['max-age'] === '0');
       if (!cleared) {
-        problems.push(`clearsCookie: ${COOKIE_NAME} 没有 Max-Age=0 或已过期的 Expires（实际 ${res.setCookies.join(' | ')}）`);
+        problems.push(`clearsCookie: ${COOKIE_NAME} 的 Max-Age 不是 "0"（实际 ${res.setCookies.join(' | ')}）`);
       }
     }
   }
