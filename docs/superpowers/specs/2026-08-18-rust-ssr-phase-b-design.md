@@ -43,14 +43,14 @@
 
 ## 5. Islands（vanilla TS + esbuild）
 
-- 目录 `islands/`，esbuild 打包到 `assets-dist/js/*.js`，`<script type="module">` 挂载；数据经 `data-*` 属性或内联 JSON 传递。
+- 目录 `islands/`，esbuild 打包到 `assets-dist/assets/js/*.js`（URL /assets/js/*；esm splitting，共享 chunk 在 chunks/，模板只引入口文件），`<script type="module">` 挂载；数据经 `data-*` 属性或内联 JSON 传递。
 - **零分叉复用**（esbuild 直接引用现有零框架 TS）：`lib/rust/{judge,playground,normalize}.ts`、`lib/progress/{store,merge,sync}.ts`、`lib/tier.ts`（如无 React 依赖）。
 - 需要 vanilla 改写的胶水：theme.js（切换+持久）、fx.js（六个动效，IntersectionObserver/rAF，respect reducedMotion）、progress-badge.js（订阅 store 更新徽章）、checklist.js、login.js（OTP 两步）、me.js（本地进度渲染）、exercise.js（CodeMirror 6 原生 + 判题 + verdict/RunOutput + hints + AI copilot + 完成标记 + 题间导航）。
 - CodeMirror 直接用 `codemirror`/`@codemirror/lang-rust`（现依赖树已有），去掉 @uiw React 包装。
 
 ## 6. CSS 管线
 
-- Tailwind v4 standalone CLI：输入 globals.css（@import tailwindcss、@plugin typography、@custom-variant dark、全部 tokens 原样），`@source` 指向 `workers/api/templates/**` 与 `islands/**`，输出 `assets-dist/site.css`。
+- Tailwind v4 standalone CLI：输入 globals.css（@import tailwindcss、@plugin typography、@custom-variant dark、全部 tokens 原样），`@source` 指向 `workers/api/templates/**` 与 `islands/**`，输出 `assets-dist/assets/site.css`（URL /assets/site.css；assets-dist 根另有 /favicon.ico /icon.png /apple-icon.png）。
 - 构建脚本 `scripts/build-site-assets.mjs`：tailwind + esbuild + 静态拷贝（fonts/icons），一条命令产出 assets-dist；wrangler deploy 前置调用。
 
 ## 7. 分批与切流
