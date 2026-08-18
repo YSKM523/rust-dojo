@@ -204,7 +204,7 @@ fn session_cookie(value: &str, max_age: i64) -> String {
     format!("rdsess={value}; Path=/; Max-Age={max_age}; Secure; HttpOnly; SameSite=Lax")
 }
 
-fn read_session(req: &Request, secret: &str) -> Option<SessionPayload> {
+pub(super) fn read_session(req: &Request, secret: &str) -> Option<SessionPayload> {
     let cookie_header = req.headers().get("cookie").ok()??;
     let token = cookie_header
         .split(';')

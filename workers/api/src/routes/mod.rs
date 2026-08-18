@@ -15,8 +15,32 @@ pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         (Method::Delete, "/api/progress") => progress::delete(req, env).await,
         (Method::Post, "/api/progress/sync") => progress::sync(req, env).await,
         (Method::Post, "/api/ai") => ai::ask(req, env).await,
+        (Method::Get, "/resources" | "/resources/") => {
+            let email = session_email(&req, &env);
+            html(crate::pages::resources::render_index(email.as_deref()))
+        }
+        (Method::Get, path) if path.starts_with("/resources/") => {
+            let id = path.trim_start_matches("/resources/");
+            let email = session_email(&req, &env);
+            match crate::pages::resources::render_detail(id, email.as_deref())
+                .map_err(|error| worker::Error::RustError(error.to_string()))?
+            {
+                Some(page) => worker::ResponseBuilder::new().from_html(page),
+                None => json(404, serde_json::json!({ "error": "not found" })),
+            }
+        }
         _ => json(404, serde_json::json!({ "error": "not found" })),
     }
+}
+
+fn session_email(req: &Request, env: &Env) -> Option<String> {
+    let secret = env_string(env, "SESSION_SECRET")?;
+    auth::read_session(req, &secret).map(|session| session.email)
+}
+
+fn html(page: askama::Result<String>) -> Result<Response> {
+    worker::ResponseBuilder::new()
+        .from_html(page.map_err(|error| worker::Error::RustError(error.to_string()))?)
 }
 
 pub(super) fn json(status: u16, value: serde_json::Value) -> Result<Response> {

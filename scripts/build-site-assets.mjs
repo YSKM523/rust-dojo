@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Phase B 静态资源构建：一条 `npm run assets` 产出 assets-dist/。
+ * Phase B 静态资源构建：一条 `npm run assets` 产出 assets-dist/assets/。
  *
- *   assets-dist/site.css        Tailwind v4 CLI 编译 islands/site.css（扫描 Rust 模板 + islands）
- *   assets-dist/js/*.js         esbuild 打包每个 island 入口（ESM，零框架，alias @ -> 仓库根）
- *   assets-dist/fonts/*.woff2   自托管字体（latin subset），替代 next/font
+ *   assets-dist/assets/site.css        Tailwind v4 CLI 编译 islands/site.css（扫描 Rust 模板 + islands）
+ *   assets-dist/assets/js/*.js         esbuild 打包每个 island 入口（ESM，零框架，alias @ -> 仓库根）
+ *   assets-dist/assets/fonts/*.woff2   自托管字体（latin subset），替代 next/font
+ *   assets-dist/favicon.ico            现有站点图标
  *
  * 产物整目录 gitignore；Worker 侧由 wrangler assets(directory=../../assets-dist) 挂到站点根，
- * 所以 CSS 里字体用绝对路径 /fonts/xxx.woff2。
+ * 所以全部静态文件统一挂在 /assets/ 下，CSS 字体路径也使用 /assets/fonts/xxx.woff2。
  *
  * 依赖说明：走 npm 包 @tailwindcss/cli（官方 CLI，与已装的 tailwindcss 同版本，不引第二份
  * Tailwind），而不是 postcss 编程调用 —— 少一层胶水，且与 spec §6「Tailwind v4 standalone CLI」一致。
@@ -23,14 +24,17 @@ import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'assets-dist');
+const OUT_ROOT = path.join(ROOT, 'assets-dist');
+const OUT = path.join(OUT_ROOT, 'assets');
 const OUT_JS = path.join(OUT, 'js');
 const OUT_FONTS = path.join(OUT, 'fonts');
 const CSS_ENTRY = path.join(ROOT, 'islands', 'site.css');
 const TEMPLATES_DIR = path.join(ROOT, 'workers', 'api', 'templates');
+const FAVICON_SOURCE = path.join(ROOT, 'app', 'favicon.ico');
+const FAVICON_OUT = path.join(OUT_ROOT, 'favicon.ico');
 
 /**
- * island 入口 = islands/ 下所有 .ts（文件名即产物名：assets-dist/js/<name>.js）。
+ * island 入口 = islands/ 下所有 .ts（文件名即产物名：assets-dist/assets/js/<name>.js）。
  * 约定：以 `_` 开头的文件是共享片段不是入口；`*.test.ts` / `*.d.ts` 同样跳过。
  * 用 glob 而不是写死清单，Task 8/12 加 island 时不用回来改这个脚本。
  */
@@ -63,7 +67,7 @@ function log(step, msg) {
 }
 
 async function clean() {
-  await rm(OUT, { recursive: true, force: true });
+  await rm(OUT_ROOT, { recursive: true, force: true });
   await mkdir(OUT_JS, { recursive: true });
   await mkdir(OUT_FONTS, { recursive: true });
   // islands/site.css 的 @source 指向模板目录；目录不存在会让 Tailwind 报错，
@@ -118,7 +122,12 @@ async function copyFonts() {
     if (!existsSync(from)) throw new Error(`缺少字体源文件：${rel}（npm i）`);
     await copyFile(from, path.join(OUT_FONTS, path.basename(rel)));
   }
-  log('fonts', `${FONT_FILES.length} woff2 -> assets-dist/fonts/`);
+  log('fonts', `${FONT_FILES.length} woff2 -> assets-dist/assets/fonts/`);
+}
+
+async function copyFavicon() {
+  await copyFile(FAVICON_SOURCE, FAVICON_OUT);
+  log('favicon', 'app/favicon.ico -> assets-dist/favicon.ico');
 }
 
 /* ------------------------------------------------------------------ */
@@ -159,7 +168,7 @@ async function selfCheck(entries) {
 
     for (const f of FONT_FILES) {
       const base = path.basename(f);
-      if (css.includes(`/fonts/${base}`)) ok(`site.css 引用 ${base}`, '');
+      if (css.includes(`/assets/fonts/${base}`)) ok(`site.css 引用 ${base}`, '');
       else bad(`site.css 引用 ${base}`, '未在 CSS 里出现');
     }
 
@@ -203,6 +212,12 @@ async function selfCheck(entries) {
     else bad(`fonts/${f} > ${MIN_FONT_BYTES} B`, `${size} B`);
   }
 
+  if (existsSync(FAVICON_OUT) && (await stat(FAVICON_OUT)).size > 0) {
+    ok('favicon.ico 存在', `${(await stat(FAVICON_OUT)).size} B`);
+  } else {
+    bad('favicon.ico 存在', FAVICON_OUT);
+  }
+
   console.log('\n[assets] self-check');
   for (const c of checks) {
     console.log(`  ${c.pass ? 'PASS' : 'FAIL'}  ${c.name}${c.detail ? `  (${c.detail})` : ''}`);
@@ -218,6 +233,7 @@ async function main() {
   buildCss();
   await buildJs(entries);
   await copyFonts();
+  await copyFavicon();
   await selfCheck(entries);
 }
 
