@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="w-full bg-bg">
+  <section data-theme="dark" class="relative overflow-hidden border-b border-line bg-[#0a0e18] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
+    <img src="/hero-blueprint.webp" alt="" aria-hidden="true" fetchpriority="high" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-right">
+    <div class="relative w-full">
+      <div class="fx-hero-item flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line pb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-fg3">
+        <span class="font-bold text-brand">RUST DOJO</span>
+        <span class="hidden h-px w-10 bg-brand sm:block"></span>
+        <span>真实 rustc 判题</span>
+        <span aria-hidden="true">·</span>
+        <span>Rust Playground</span>
+        <span aria-hidden="true">·</span>
+        <span>中文 · 后端方向</span>
+      </div>
+
+      <div class="fx-hero-item mt-8" style="--fx-delay: 80ms">
+        <div data-fx="hero-terminal" class="min-h-[4.5rem] font-mono text-[13px] leading-6 text-fg3 sm:min-h-[4.5rem]" aria-label="cargo 启动序列">
+          <p data-fx-cmd class="text-fg2">$ cargo run --release --jd 2026</p>
+          <p data-fx-line>   Compiling rust-dojo v0.1.0</p>
+          <p data-fx-line class="text-ok">    Finished `release` in 0.8s — 开始训练</p>
+        </div>
+      </div>
+
+      <h1 class="fx-hero-item mt-6 text-[clamp(3.25rem,13vw,10rem)] font-black leading-[0.86] tracking-tight text-fg" style="--fx-delay: 180ms">Rust 道场</h1>
+
+      <div class="mt-10 grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <div class="fx-hero-item" style="--fx-delay: 320ms">
+          <p class="max-w-2xl text-xl leading-9 text-fg2 sm:text-2xl sm:leading-10">从 0 到生产级后端，按 2026 真实招聘需求设计。</p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <span data-fx="magnetic" class="inline-block">
+              <span class="fx-magnet inline-block">
+                <a href="/learn" class="fx-press inline-flex items-center gap-2 bg-brand px-6 py-3.5 font-bold text-white transition hover:bg-brand-hover">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
+                  开始学习
+                </a>
+              </span>
+            </span>
+            <a href="/resources" class="fx-press inline-flex items-center gap-2 border border-line bg-panel2 px-6 py-3.5 font-semibold text-fg transition hover:border-brand hover:text-brand">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path><path d="M15 5.764v15"></path><path d="M9 3.236v15"></path></svg>
+              求职地图
+            </a>
+          </div>
+        </div>
+
+        <dl class="fx-hero-item border-t border-line" style="--fx-delay: 440ms">
+          <div class="grid grid-cols-[64px_1fr] gap-4 border-b border-line py-4">
+            <dt class="font-mono text-[11px] uppercase tracking-[0.2em] text-fg3">定位</dt>
+            <dd class="text-sm leading-6 text-fg2">按真实 JD 需求设计的中文 Rust 后端实战路线</dd>
+          </div>
+          <div class="grid grid-cols-[64px_1fr] gap-4 border-b border-line py-4">
+            <dt class="font-mono text-[11px] uppercase tracking-[0.2em] text-fg3">终点</dt>
+            <dd class="text-sm leading-6 text-fg2">能独立写、能读懂、能维护一个生产级 Rust 后端服务</dd>
+          </div>
+          <div class="grid grid-cols-[64px_1fr] gap-4 border-b border-line py-4">
+            <dt class="font-mono text-[11px] uppercase tracking-[0.2em] text-fg3">判题</dt>
+            <dd class="text-sm leading-6 text-fg2">浏览器内调用 Rust Playground 真实编译运行</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <div data-fx="marquee" class="fx-marquee border-y border-line py-3 bg-bg2">
+    <div class="fx-marquee-track">
+      <span aria-hidden="false" class="inline-flex items-center">
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">OWNERSHIP<span aria-hidden="true" class="inline-block h-1 w-1 bg-brand"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">TOKIO<span aria-hidden="true" class="inline-block h-1 w-1 bg-sky-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">AXUM<span aria-hidden="true" class="inline-block h-1 w-1 bg-emerald-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">SQLX<span aria-hidden="true" class="inline-block h-1 w-1 bg-violet-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">SERDE<span aria-hidden="true" class="inline-block h-1 w-1 bg-brand"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">SEND + SYNC<span aria-hidden="true" class="inline-block h-1 w-1 bg-sky-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">ASYNC / AWAIT<span aria-hidden="true" class="inline-block h-1 w-1 bg-emerald-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">TRAIT<span aria-hidden="true" class="inline-block h-1 w-1 bg-violet-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">LIFETIME<span aria-hidden="true" class="inline-block h-1 w-1 bg-brand"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">POSTGRESQL<span aria-hidden="true" class="inline-block h-1 w-1 bg-sky-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">GRPC<span aria-hidden="true" class="inline-block h-1 w-1 bg-emerald-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">DOCKER · CI<span aria-hidden="true" class="inline-block h-1 w-1 bg-violet-500"></span></span>
+      </span>
+      <span aria-hidden="true" class="inline-flex items-center">
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">OWNERSHIP<span aria-hidden="true" class="inline-block h-1 w-1 bg-brand"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">TOKIO<span aria-hidden="true" class="inline-block h-1 w-1 bg-sky-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">AXUM<span aria-hidden="true" class="inline-block h-1 w-1 bg-emerald-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">SQLX<span aria-hidden="true" class="inline-block h-1 w-1 bg-violet-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">SERDE<span aria-hidden="true" class="inline-block h-1 w-1 bg-brand"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">SEND + SYNC<span aria-hidden="true" class="inline-block h-1 w-1 bg-sky-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">ASYNC / AWAIT<span aria-hidden="true" class="inline-block h-1 w-1 bg-emerald-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">TRAIT<span aria-hidden="true" class="inline-block h-1 w-1 bg-violet-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">LIFETIME<span aria-hidden="true" class="inline-block h-1 w-1 bg-brand"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">POSTGRESQL<span aria-hidden="true" class="inline-block h-1 w-1 bg-sky-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">GRPC<span aria-hidden="true" class="inline-block h-1 w-1 bg-emerald-500"></span></span>
+        <span class="mx-6 inline-flex items-center gap-6 font-mono text-xs font-bold uppercase tracking-[0.3em] text-fg3">DOCKER · CI<span aria-hidden="true" class="inline-block h-1 w-1 bg-violet-500"></span></span>
+      </span>
+    </div>
+  </div>
+
+  <section aria-label="平台规模" class="border-b border-line bg-bg2 px-4 sm:px-6 lg:px-8">
+    <div class="grid w-full grid-cols-2 gap-px bg-white/25 lg:grid-cols-4">
+      <div class="bg-brand px-5 py-8 sm:px-6">
+        <p class="text-5xl font-black leading-none text-white sm:text-6xl"><span data-fx="count-up" data-fx-value="{{ module_count }}" data-fx-suffix="" data-fx-duration="900">{{ module_count }}</span></p>
+        <p class="mt-3 text-sm font-bold text-white">大模块</p>
+        <p class="mt-1 text-xs leading-5 text-white/90">从所有权到生产化</p>
+      </div>
+      <div class="bg-sky-700 px-5 py-8 sm:px-6">
+        <p class="text-5xl font-black leading-none text-white sm:text-6xl"><span data-fx="count-up" data-fx-value="{{ exercise_count }}" data-fx-suffix="{{ exercise_suffix }}" data-fx-duration="900">{{ exercise_count }}{{ exercise_suffix }}</span></p>
+        <p class="mt-3 text-sm font-bold text-white">交互练习</p>
+        <p class="mt-1 text-xs leading-5 text-white/90">写完即时判题</p>
+      </div>
+      <div class="bg-emerald-700 px-5 py-8 sm:px-6">
+        <p class="text-5xl font-black leading-none text-white sm:text-6xl"><span data-fx="count-up" data-fx-value="{{ project_count }}" data-fx-suffix="" data-fx-duration="900">{{ project_count }}</span></p>
+        <p class="mt-3 text-sm font-bold text-white">本地实战项目</p>
+        <p class="mt-1 text-xs leading-5 text-white/90">cargo 真项目</p>
+      </div>
+      <div class="bg-violet-700 px-5 py-8 sm:px-6">
+        <p class="text-5xl font-black leading-none text-white sm:text-6xl"><span data-fx="count-up" data-fx-value="3" data-fx-suffix="" data-fx-duration="900">3</span></p>
+        <p class="mt-3 text-sm font-bold text-white">种判题模式</p>
+        <p class="mt-1 text-xs leading-5 text-white/90">输出 / 编译 / 测试</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="why-rust-title" class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg2">
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <div class="w-full">
+        <div class="fx-reveal" data-fx="reveal">
+          <div class="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p class="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">Why Rust / 岗位事实</p>
+              <h2 id="why-rust-title" class="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">为什么是 Rust</h2>
+            </div>
+            <p class="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">下面四条都来自 2026-07 Indeed 加拿大 / 美国岗位与公开招聘页的调研，不是感想。路线的每一个模块都能回溯到其中一条需求。</p>
+          </div>
+        </div>
+
+        <div class="mt-10 grid gap-px border border-line bg-line md:grid-cols-2">
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="0">
+            <article class="group h-full border-t-2 border-brand p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex items-baseline justify-between gap-4"><span class="font-mono text-5xl font-black leading-none text-brand transition-transform duration-300 group-hover:-translate-y-1">01</span><span class="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">tokio · axum · sqlx</span></div>
+              <h3 class="mt-8 text-2xl font-black leading-snug text-fg">云后端是最大的需求方向</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">Rust 岗位集中在四类：云后端服务、交易与量化系统、区块链、基础设施与编译器。其中云后端占比最大，JD 里反复出现的是 tokio、axum/actix、sqlx、gRPC 与 Kubernetes——本站的路线就沿着这条主线铺。</p>
+            </article>
+          </div>
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="90">
+            <article class="group h-full border-t-2 border-sky-600 p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex items-baseline justify-between gap-4"><span class="font-mono text-5xl font-black leading-none text-sky-700 dark:text-sky-400 transition-transform duration-300 group-hover:-translate-y-1">02</span><span class="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">2026-07 公开挂牌</span></div>
+              <h3 class="mt-8 text-2xl font-black leading-snug text-fg">薪资锚点写在招聘页上</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">Sangoma 的加拿大远程 Senior Backend Developer (Rust) 公开区间 120,000–135,000 CAD；美国侧 EngFlow 160,000–220,000 USD、Radar 200,000–300,000 USD。这些是 2026-07 抓到的挂牌数字，不是市场推断。</p>
+            </article>
+          </div>
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="180">
+            <article class="group h-full border-t-2 border-emerald-600 p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex items-baseline justify-between gap-4"><span class="font-mono text-5xl font-black leading-none text-emerald-700 dark:text-emerald-400 transition-transform duration-300 group-hover:-translate-y-1">03</span><span class="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">行业趋势</span></div>
+              <h3 class="mt-8 text-2xl font-black leading-snug text-fg">内存安全正在推动迁移</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">内存安全缺陷长期占据 C/C++ 代码库严重漏洞的主要部分，监管与大厂都在推动关键组件用内存安全语言重写。这类岗位要的不是“会写语法”，而是能讲清所有权与并发模型的人。</p>
+            </article>
+          </div>
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="270">
+            <article class="group h-full border-t-2 border-violet-600 p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex items-baseline justify-between gap-4"><span class="font-mono text-5xl font-black leading-none text-violet-700 dark:text-violet-400 transition-transform duration-300 group-hover:-translate-y-1">04</span><span class="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">面试主战场</span></div>
+              <h3 class="mt-8 text-2xl font-black leading-snug text-fg">门槛在心智模型，不在语法</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">面试真正深挖的是所有权取舍、生命周期标注、静态与动态分发、Send + Sync、async 的阻塞与取消陷阱、unsafe 的边界。这些正是本站练习与面试题库的重心。</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="route-title" class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg3">
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <div class="w-full">
+        <div class="fx-reveal" data-fx="reveal">
+          <div class="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p class="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">Route / 01 — 08</p>
+              <h2 id="route-title" class="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">八个模块</h2>
+            </div>
+            <p class="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">顺序即难度：前四个模块解决“看得懂、写得出”，后四个模块解决“能上线、能扛住并发”。每个模块后面挂练习，关键节点挂本地实战项目。</p>
+          </div>
+        </div>
+
+        <div data-fx="module-ladder" class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,0.5fr)_minmax(0,1.5fr)]">
+          <div class="hidden lg:block">
+            <div class="sticky top-28 border-t-2 border-brand pt-6">
+              <p class="font-mono text-6xl font-black leading-none text-fg tabular-nums"><span data-fx-ladder-index>01</span><span class="text-2xl text-fg3"> / {{ module_total_padded }}</span></p>
+              {% if initial_is_beginner %}
+              <p data-fx-ladder-tier class="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-400">{{ initial_module.tier_label }}</p>
+              {% else if initial_is_intermediate %}
+              <p data-fx-ladder-tier class="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-sky-700 dark:text-sky-400">{{ initial_module.tier_label }}</p>
+              {% else if initial_is_advanced %}
+              <p data-fx-ladder-tier class="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-violet-700 dark:text-violet-400">{{ initial_module.tier_label }}</p>
+              {% else if initial_is_senior %}
+              <p data-fx-ladder-tier class="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-amber-800 dark:text-amber-400">{{ initial_module.tier_label }}</p>
+              {% else if initial_is_sprint %}
+              <p data-fx-ladder-tier class="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-brand dark:text-[#ef8f4a]">{{ initial_module.tier_label }}</p>
+              {% else %}
+              <p data-fx-ladder-tier class="mt-5 font-mono text-[11px] uppercase tracking-[0.24em] text-brand dark:text-[#ef8f4a]">{{ initial_module.tier_label }}</p>
+              {% endif %}
+              <p data-fx-ladder-summary class="mt-4 min-h-[6rem] max-w-xs text-sm leading-7 text-fg2">{{ initial_module.summary }}</p>
+              <div class="mt-6 h-px w-full bg-line">
+                {% if initial_is_beginner %}
+                <div data-fx-ladder-bar class="h-px bg-emerald-600 transition-all duration-500" style="width: {{ initial_progress_width }}"></div>
+                {% else if initial_is_intermediate %}
+                <div data-fx-ladder-bar class="h-px bg-sky-600 transition-all duration-500" style="width: {{ initial_progress_width }}"></div>
+                {% else if initial_is_advanced %}
+                <div data-fx-ladder-bar class="h-px bg-violet-600 transition-all duration-500" style="width: {{ initial_progress_width }}"></div>
+                {% else if initial_is_senior %}
+                <div data-fx-ladder-bar class="h-px bg-amber-600 transition-all duration-500" style="width: {{ initial_progress_width }}"></div>
+                {% else if initial_is_sprint %}
+                <div data-fx-ladder-bar class="h-px bg-brand transition-all duration-500" style="width: {{ initial_progress_width }}"></div>
+                {% else %}
+                <div data-fx-ladder-bar class="h-px bg-brand transition-all duration-500" style="width: {{ initial_progress_width }}"></div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <ol data-fx-ladder-rows class="border-t border-line">
+            {% for row in modules %}
+            {% if row.is_beginner %}
+            <li class="fx-ladder-row border-b border-line" data-active="{{ loop.first }}" data-fx-tier="{{ row.module.tier_label }}" data-fx-tier-class="text-emerald-700 dark:text-emerald-400" data-fx-bar-class="bg-emerald-600" data-fx-summary="{{ row.module.summary }}">
+            {% else if row.is_intermediate %}
+            <li class="fx-ladder-row border-b border-line" data-active="{{ loop.first }}" data-fx-tier="{{ row.module.tier_label }}" data-fx-tier-class="text-sky-700 dark:text-sky-400" data-fx-bar-class="bg-sky-600" data-fx-summary="{{ row.module.summary }}">
+            {% else if row.is_advanced %}
+            <li class="fx-ladder-row border-b border-line" data-active="{{ loop.first }}" data-fx-tier="{{ row.module.tier_label }}" data-fx-tier-class="text-violet-700 dark:text-violet-400" data-fx-bar-class="bg-violet-600" data-fx-summary="{{ row.module.summary }}">
+            {% else if row.is_senior %}
+            <li class="fx-ladder-row border-b border-line" data-active="{{ loop.first }}" data-fx-tier="{{ row.module.tier_label }}" data-fx-tier-class="text-amber-800 dark:text-amber-400" data-fx-bar-class="bg-amber-600" data-fx-summary="{{ row.module.summary }}">
+            {% else if row.is_sprint %}
+            <li class="fx-ladder-row border-b border-line" data-active="{{ loop.first }}" data-fx-tier="{{ row.module.tier_label }}" data-fx-tier-class="text-brand dark:text-[#ef8f4a]" data-fx-bar-class="bg-brand" data-fx-summary="{{ row.module.summary }}">
+            {% else %}
+            <li class="fx-ladder-row border-b border-line" data-active="{{ loop.first }}" data-fx-tier="{{ row.module.tier_label }}" data-fx-tier-class="text-brand dark:text-[#ef8f4a]" data-fx-bar-class="bg-brand" data-fx-summary="{{ row.module.summary }}">
+            {% endif %}
+              <a href="{{ row.href }}" class="group grid grid-cols-[44px_1fr] items-baseline gap-x-4 py-6 sm:grid-cols-[64px_1fr_28px] sm:gap-x-6 lg:py-7">
+                {% if row.is_beginner %}
+                <span class="font-mono text-sm font-black sm:text-base text-emerald-700 dark:text-emerald-400">{{ row.order_padded }}</span>
+                {% else if row.is_intermediate %}
+                <span class="font-mono text-sm font-black sm:text-base text-sky-700 dark:text-sky-400">{{ row.order_padded }}</span>
+                {% else if row.is_advanced %}
+                <span class="font-mono text-sm font-black sm:text-base text-violet-700 dark:text-violet-400">{{ row.order_padded }}</span>
+                {% else if row.is_senior %}
+                <span class="font-mono text-sm font-black sm:text-base text-amber-800 dark:text-amber-400">{{ row.order_padded }}</span>
+                {% else if row.is_sprint %}
+                <span class="font-mono text-sm font-black sm:text-base text-brand dark:text-[#ef8f4a]">{{ row.order_padded }}</span>
+                {% else %}
+                <span class="font-mono text-sm font-black sm:text-base text-brand dark:text-[#ef8f4a]">{{ row.order_padded }}</span>
+                {% endif %}
+                <span class="text-2xl font-black leading-tight tracking-tight text-fg transition-colors group-hover:text-brand sm:text-4xl lg:text-5xl">{{ row.module.title }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right hidden -translate-x-1.5 text-fg3 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:text-brand group-hover:opacity-100 sm:block" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                <span class="col-start-2 mt-2 text-sm leading-6 text-fg2 lg:hidden">{{ row.module.summary }}</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+
+        <a href="/learn" class="mt-8 inline-flex items-center gap-2 text-sm font-bold text-link hover:underline">查看完整学习路线图 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="method-title" class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg2">
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <div class="w-full">
+        <div class="fx-reveal" data-fx="reveal">
+          <div class="grid gap-6 border-t border-line pt-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p class="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">Method / 怎么练</p>
+              <h2 id="method-title" class="mt-5 text-5xl font-black leading-none text-fg sm:text-7xl">学习方式</h2>
+            </div>
+            <p class="max-w-2xl text-base leading-8 text-fg2 lg:justify-self-end">小题在浏览器里跑，大项目在你自己的终端里跑，验收标准写在清单上。不背语法，只留下能带走的工程习惯。</p>
+          </div>
+        </div>
+
+        <div class="mt-10 grid gap-px border border-line bg-line md:grid-cols-3">
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="0">
+            <article class="flex h-full flex-col p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex h-10 w-10 items-center justify-center bg-brand text-white"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-terminal" aria-hidden="true"><path d="m7 11 2-2-2-2"></path><path d="M11 13h4"></path><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect></svg></div>
+              <p class="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-fg3">浏览器内真编译</p>
+              <h3 class="mt-3 text-xl font-black leading-snug text-fg">写完就判，报错就是 rustc 报错</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">每道练习直接提交到 Rust Playground 编译运行，返回真实的编译器诊断。三种判题模式：比对标准输出、要求通过编译、跑隐藏测试。</p>
+            </article>
+          </div>
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="100">
+            <article class="flex h-full flex-col p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex h-10 w-10 items-center justify-center bg-sky-700 text-white"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg></div>
+              <p class="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-fg3">本地 cargo 实战</p>
+              <h3 class="mt-3 text-xl font-black leading-snug text-fg">四个能放进简历的小项目</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">mini-grep、带持久化的 todo CLI、tokio 并发抓取器、axum + sqlx + WebSocket 完整后端。项目在你自己的机器上用 cargo 跑，和上班时一样。</p>
+            </article>
+          </div>
+          <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="200">
+            <article class="flex h-full flex-col p-6 transition-colors duration-300 hover:bg-panel2 sm:p-8">
+              <div class="flex h-10 w-10 items-center justify-center bg-emerald-700 text-white"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-check-big" aria-hidden="true"><path d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344"></path><path d="m9 11 3 3L22 4"></path></svg></div>
+              <p class="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-fg3">验收清单</p>
+              <h3 class="mt-3 text-xl font-black leading-snug text-fg">完成的标准是写死的</h3>
+              <p class="mt-4 text-sm leading-7 text-fg2">每个项目配一份可勾选的验收清单，含可复制的测试命令。练习与清单共用同一套进度，登录后云端同步，换设备继续。</p>
+            </article>
+          </div>
+        </div>
+
+        {% if !featured_resources.is_empty() %}
+        <div class="mt-12 border-t border-line pt-8">
+          <div class="flex flex-wrap items-baseline justify-between gap-4">
+            <p class="font-mono text-xs font-black uppercase tracking-[0.24em] text-brand">求职地图 / 精选</p>
+            <a href="/resources" class="inline-flex items-center gap-2 text-sm font-bold text-link hover:underline">全部资源 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+          </div>
+          <div class="mt-6 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+            {% for item in featured_resources %}
+            <div class="fx-reveal bg-panel" data-fx="reveal" data-fx-delay="{{ item.delay }}">
+              <a href="{{ item.href }}" class="group block h-full p-5 transition-colors hover:bg-panel2">
+                <p class="font-mono text-[11px] uppercase tracking-[0.16em] text-fg3">{{ item.resource.category }}</p>
+                <h3 class="mt-3 text-base font-black leading-snug text-fg group-hover:text-brand">{{ item.resource.title }}</h3>
+                <p class="mt-2 text-sm leading-6 text-fg2">{{ item.resource.summary }}</p>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -8,12 +8,13 @@ use crate::pages::{self, RenderedPage};
 
 type PageHandler = fn(&str, Option<&str>) -> askama::Result<RenderedPage>;
 
-const PAGE_ROUTES: [(&str, PageHandler); 5] = [
+const PAGE_ROUTES: [(&str, PageHandler); 6] = [
     ("/login", pages::login::render_page),
     ("/me", pages::me::render_page),
     ("/learn", pages::learn::render_page),
     ("/project/", pages::project::render_page),
-    ("/", pages::resources::render_page),
+    ("/resources", pages::resources::render_page),
+    ("/", pages::home::render_page),
 ];
 
 pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
@@ -42,7 +43,9 @@ fn page_handler(path: &str) -> PageHandler {
     PAGE_ROUTES
         .iter()
         .find(|(prefix, _)| {
-            if prefix.ends_with('/') {
+            if *prefix == "/" {
+                path == "/"
+            } else if prefix.ends_with('/') {
                 path.starts_with(prefix)
             } else {
                 path == *prefix
@@ -52,7 +55,7 @@ fn page_handler(path: &str) -> PageHandler {
             }
         })
         .map(|(_, handler)| *handler)
-        .unwrap_or(pages::resources::render_page)
+        .unwrap_or(pages::home::render_page)
 }
 
 fn session_email(req: &Request, env: &Env) -> Option<String> {

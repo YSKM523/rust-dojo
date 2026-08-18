@@ -1,6 +1,7 @@
 use askama::Template;
 
 pub mod content;
+pub mod home;
 pub mod learn;
 pub mod login;
 pub mod me;

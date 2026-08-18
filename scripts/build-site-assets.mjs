@@ -8,6 +8,7 @@
  *   assets-dist/favicon.ico            现有站点 favicon
  *   assets-dist/icon.png               512x512 app icon
  *   assets-dist/apple-icon.png         180x180 Apple touch icon
+ *   assets-dist/hero-blueprint.webp     首页 hero 蓝图背景
  *
  * 产物整目录 gitignore；Worker 侧由 wrangler assets(directory=../../assets-dist) 挂到站点根，
  * CSS/island/font 统一挂在 /assets/ 下；Next 文件约定的三枚图标保留站点根 URL。
@@ -35,6 +36,7 @@ const TEMPLATES_DIR = path.join(ROOT, 'workers', 'api', 'templates');
 const FAVICON_SOURCE = path.join(ROOT, 'app', 'favicon.ico');
 const FAVICON_OUT = path.join(OUT_ROOT, 'favicon.ico');
 const APP_ICONS = ['icon.png', 'apple-icon.png'];
+const PUBLIC_ROOT_FILES = ['hero-blueprint.webp'];
 
 /**
  * island 入口 = islands/ 下所有 .ts（文件名即产物名：assets-dist/assets/js/<name>.js）。
@@ -134,6 +136,10 @@ async function copyStaticIcons() {
     await copyFile(path.join(ROOT, 'app', name), path.join(OUT_ROOT, name));
   }
   log('icons', `app/{favicon.ico,${APP_ICONS.join(',')}} -> assets-dist/`);
+  for (const name of PUBLIC_ROOT_FILES) {
+    await copyFile(path.join(ROOT, 'public', name), path.join(OUT_ROOT, name));
+  }
+  log('public', `${PUBLIC_ROOT_FILES.join(', ')} -> assets-dist/`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -229,6 +235,14 @@ async function selfCheck(entries) {
       ok(`${name} 存在`, `${(await stat(iconPath)).size} B`);
     } else {
       bad(`${name} 存在`, iconPath);
+    }
+  }
+  for (const name of PUBLIC_ROOT_FILES) {
+    const publicPath = path.join(OUT_ROOT, name);
+    if (existsSync(publicPath) && (await stat(publicPath)).size > 0) {
+      ok(`${name} 存在`, `${(await stat(publicPath)).size} B`);
+    } else {
+      bad(`${name} 存在`, publicPath);
     }
   }
 

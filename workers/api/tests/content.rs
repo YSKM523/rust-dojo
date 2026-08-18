@@ -1,4 +1,5 @@
 use rust_dojo_api::pages::content::{render_markdown, site_content};
+use rust_dojo_api::pages::home::render_page as render_home_page;
 use rust_dojo_api::pages::learn::{
     render_detail as render_learn_detail, render_index as render_learn_index,
     render_page as render_learn_page,
@@ -9,6 +10,90 @@ use rust_dojo_api::pages::project::{
     render_detail as render_project_detail, render_page as render_project_page,
 };
 use rust_dojo_api::pages::resources::{render_detail, render_index, render_page};
+
+#[test]
+fn home_page_renders_every_section_and_complete_fx_mounts() {
+    let page = render_home_page("/", None).expect("home page renders a response");
+
+    assert_eq!(page.status, 200);
+    assert!(page
+        .html
+        .contains("<title>Rust 道场 — 从零到后端实战</title>"));
+    assert!(page.html.contains("<h1"));
+    assert!(page.html.contains("Rust 道场"));
+    assert!(page.html.contains("为什么是 Rust"));
+    assert!(page.html.contains("八个模块"));
+    assert!(page.html.contains("学习方式"));
+    assert!(page.html.contains("求职地图 / 精选"));
+    for statistic in ["8", "60", "4", "3"] {
+        assert!(
+            page.html
+                .contains(&format!("data-fx-value=\"{statistic}\"")),
+            "missing count-up statistic: {statistic}"
+        );
+    }
+    assert_eq!(page.html.matches("class=\"fx-ladder-row").count(), 8);
+    assert_eq!(page.html.matches("data-active=\"true\"").count(), 1);
+    assert_eq!(page.html.matches("data-active=\"false\"").count(), 7);
+    for (text_class, bar_class) in [
+        ("text-emerald-700 dark:text-emerald-400", "bg-emerald-600"),
+        ("text-sky-700 dark:text-sky-400", "bg-sky-600"),
+        ("text-violet-700 dark:text-violet-400", "bg-violet-600"),
+        ("text-amber-800 dark:text-amber-400", "bg-amber-600"),
+        ("text-brand dark:text-[#ef8f4a]", "bg-brand"),
+    ] {
+        assert!(page
+            .html
+            .contains(&format!("data-fx-tier-class=\"{text_class}\"")));
+        assert!(page
+            .html
+            .contains(&format!("data-fx-bar-class=\"{bar_class}\"")));
+    }
+    for mount in [
+        "reveal",
+        "count-up",
+        "hero-terminal",
+        "magnetic",
+        "marquee",
+        "module-ladder",
+    ] {
+        assert!(
+            page.html.contains(&format!("data-fx=\"{mount}\"")),
+            "missing fx mount: {mount}"
+        );
+    }
+    assert!(page.html.contains("data-fx-ladder-index>01</span>"));
+    assert!(page
+        .html
+        .contains("<p data-fx-cmd class=\"text-fg2\">$ cargo run --release --jd 2026</p>"));
+    assert!(page
+        .html
+        .contains("<p data-fx-line>   Compiling rust-dojo v0.1.0</p>"));
+    assert!(page.html.contains(
+        "<p data-fx-line class=\"text-ok\">    Finished `release` in 0.8s — 开始训练</p>"
+    ));
+    assert!(!page.html.contains("fx-caret"));
+    assert!(page
+        .html
+        .contains("<script type=\"module\" src=\"/assets/js/fx.js\"></script>"));
+    let featured_positions = [
+        "href=\"/resources/jd-ownership\"",
+        "href=\"/resources/jd-async\"",
+        "href=\"/resources/q-blocking\"",
+        "href=\"/resources/cheat-error-tree\"",
+    ]
+    .map(|href| page.html.find(href).expect("featured resource renders"));
+    assert!(featured_positions.windows(2).all(|pair| pair[0] < pair[1]));
+}
+
+#[test]
+fn home_page_renderer_preserves_the_html_not_found_fallback() {
+    let page = render_home_page("/nope", None).expect("unknown page renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(page.html.contains("页面不存在"));
+    assert!(!page.html.contains("为什么是 Rust"));
+}
 
 #[test]
 fn generated_site_content_deserializes_with_all_modules() {
