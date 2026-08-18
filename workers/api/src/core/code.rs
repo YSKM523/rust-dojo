@@ -55,6 +55,10 @@ fn without_space_or_at(value: &str) -> bool {
         .all(|character| character != '@' && !is_ecmascript_whitespace(character))
 }
 
+pub fn trim_ecmascript(value: &str) -> &str {
+    value.trim_matches(is_ecmascript_whitespace)
+}
+
 fn is_ecmascript_whitespace(character: char) -> bool {
     matches!(
         character,
@@ -89,6 +93,28 @@ mod tests {
         assert!(is_valid_email("a\u{0085}@b.c"));
         assert!(!is_valid_email("a@b"));
         assert!(!is_valid_email("a@@b.c"));
+    }
+
+    #[test]
+    fn trim_ecmascript_matches_javascript_whitespace() {
+        let whitespace = [
+            '\u{0009}', '\u{000a}', '\u{000b}', '\u{000c}', '\u{000d}', '\u{0020}', '\u{00a0}',
+            '\u{1680}', '\u{2000}', '\u{2001}', '\u{2002}', '\u{2003}', '\u{2004}', '\u{2005}',
+            '\u{2006}', '\u{2007}', '\u{2008}', '\u{2009}', '\u{200a}', '\u{2028}', '\u{2029}',
+            '\u{202f}', '\u{205f}', '\u{3000}', '\u{feff}',
+        ];
+
+        for character in whitespace {
+            assert_eq!(
+                trim_ecmascript(&format!("{character}value{character}")),
+                "value"
+            );
+        }
+        assert_eq!(
+            trim_ecmascript("\u{0085}value\u{0085}"),
+            "\u{0085}value\u{0085}"
+        );
+        assert_eq!(trim_ecmascript("  val ue  "), "val ue");
     }
 
     #[test]
