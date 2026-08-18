@@ -16,7 +16,7 @@
  *   PATH=~/.nvm/versions/node/v22.22.2/bin:$PATH npm run assets
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { copyFile, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,27 +29,34 @@ const OUT_FONTS = path.join(OUT, 'fonts');
 const CSS_ENTRY = path.join(ROOT, 'islands', 'site.css');
 const TEMPLATES_DIR = path.join(ROOT, 'workers', 'api', 'templates');
 
-/** island 入口（文件名即产物名：assets-dist/js/<name>.js） */
-const ISLAND_ENTRIES = ['theme', 'progress-badge', 'fx'];
+/**
+ * island 入口 = islands/ 下所有 .ts（文件名即产物名：assets-dist/js/<name>.js）。
+ * 约定：以 `_` 开头的文件是共享片段不是入口；`*.test.ts` / `*.d.ts` 同样跳过。
+ * 用 glob 而不是写死清单，Task 8/12 加 island 时不用回来改这个脚本。
+ */
+function islandEntries() {
+  return readdirSync(path.join(ROOT, 'islands'))
+    .filter((f) => f.endsWith('.ts') && !f.endsWith('.d.ts') && !f.endsWith('.test.ts'))
+    .filter((f) => !f.startsWith('_'))
+    .map((f) => f.slice(0, -3))
+    .sort();
+}
 
 /**
- * 字体来源：npm @fontsource/*（SIL OFL），取 latin subset 的静态字重 woff2。
- * Inter 400/500/600/700 + Geist Mono 400 —— 覆盖 app/globals.css 里 font-sans/font-mono
- * 实际用到的字重（black/900 由 Inter 700 + 合成加粗回退，与 next/font 的 latin 子集口径一致）。
+ * 字体来源：npm @fontsource-variable/*（SIL OFL），取 latin subset 的 **可变字体**
+ * （wght 轴 100–900），与现网 next/font 从 Google 拿到的可变字体口径一致：
+ * 一个文件覆盖 font-medium/semibold/bold/black 全部字重，不靠浏览器合成加粗。
  */
 const FONT_FILES = [
-  '@fontsource/inter/files/inter-latin-400-normal.woff2',
-  '@fontsource/inter/files/inter-latin-500-normal.woff2',
-  '@fontsource/inter/files/inter-latin-600-normal.woff2',
-  '@fontsource/inter/files/inter-latin-700-normal.woff2',
-  '@fontsource/geist-mono/files/geist-mono-latin-400-normal.woff2',
+  '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
+  '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2',
 ];
 
-/**
- * 字体体积下限。Geist Mono latin-400 的真身是 9 864 B（≈9.6 KB），
- * 所以门槛取 8 KB 而不是 10 KB —— 10 KB 会把一个完全正确的 subset 判红。
- */
-const MIN_FONT_BYTES = 8 * 1024;
+/** 字体体积下限：两个 latin 可变子集分别是 48 256 B / 23 128 B，10 KB 门槛有充足余量。 */
+const MIN_FONT_BYTES = 10 * 1024;
+
+/** 可变字体必须声明 wght 区间，漏了就退化成单一字重。 */
+const WEIGHT_RANGE_RE = /font-weight:\s*100\s+900/g;
 
 function log(step, msg) {
   console.log(`[assets] ${step}: ${msg}`);
@@ -77,9 +84,9 @@ function buildCss() {
   log('css', path.relative(ROOT, out));
 }
 
-async function buildJs() {
+async function buildJs(entries) {
   const result = await esbuild.build({
-    entryPoints: ISLAND_ENTRIES.map((name) => path.join(ROOT, 'islands', `${name}.ts`)),
+    entryPoints: entries.map((name) => path.join(ROOT, 'islands', `${name}.ts`)),
     outdir: OUT_JS,
     bundle: true,
     format: 'esm',
@@ -88,11 +95,21 @@ async function buildJs() {
     minify: true,
     legalComments: 'none',
     logLevel: 'warning',
+    // code splitting 是硬要求，不是体积优化：lib/progress/store.ts 是**带状态的单例**
+    // （cache + listeners）。不拆的话每个 island bundle 各自内联一份 store，
+    // exercise/checklist 里 markCompleted() 写的是自己那份，同页 progress-badge
+    // 的 listener 根本不在同一个 Set 里，徽章不会更新。开 splitting 后共享模块被提到
+    // chunks/ 下，各 entry import 同一个 URL，浏览器保证只求值一次 = 真单例。
+    splitting: true,
+    chunkNames: 'chunks/[name]-[hash]',
     // tsconfig 的 paths: { "@/*": ["./*"] } —— islands 直接 import 现有零框架 TS，不分叉。
     alias: { '@': ROOT },
   });
   if (result.errors.length) throw new Error('esbuild 失败');
-  log('js', ISLAND_ENTRIES.map((n) => `${n}.js`).join(', '));
+  const chunks = existsSync(path.join(OUT_JS, 'chunks'))
+    ? readdirSync(path.join(OUT_JS, 'chunks')).length
+    : 0;
+  log('js', `${entries.map((n) => `${n}.js`).join(', ')}${chunks ? ` (+${chunks} shared chunk)` : ''}`);
 }
 
 async function copyFonts() {
@@ -107,7 +124,7 @@ async function copyFonts() {
 /* ------------------------------------------------------------------ */
 /* 自检：构建完立刻按契约断言产物，红了直接非零退出                       */
 /* ------------------------------------------------------------------ */
-async function selfCheck() {
+async function selfCheck(entries) {
   const checks = [];
   const ok = (name, detail) => checks.push({ pass: true, name, detail });
   const bad = (name, detail) => checks.push({ pass: false, name, detail });
@@ -135,22 +152,42 @@ async function selfCheck() {
     if (faces.length >= FONT_FILES.length) ok('site.css 含 @font-face', `${faces.length} 条`);
     else bad('site.css 含 @font-face', `只有 ${faces.length} 条，期望 >= ${FONT_FILES.length}`);
 
+    // 可变字体：每条 @font-face 都要声明 wght 区间 100–900，否则退化成单一字重。
+    const ranges = css.match(WEIGHT_RANGE_RE) ?? [];
+    if (ranges.length >= FONT_FILES.length) ok('@font-face 声明 font-weight 100 900', `${ranges.length} 条`);
+    else bad('@font-face 声明 font-weight 100 900', `只有 ${ranges.length} 条，期望 >= ${FONT_FILES.length}`);
+
+    for (const f of FONT_FILES) {
+      const base = path.basename(f);
+      if (css.includes(`/fonts/${base}`)) ok(`site.css 引用 ${base}`, '');
+      else bad(`site.css 引用 ${base}`, '未在 CSS 里出现');
+    }
+
     // minify 会把属性选择器的引号去掉（[data-theme=dark]），两种写法都认。
     if (/\[data-theme=["']?dark["']?\]/.test(css)) ok('site.css 含暗色主题块', '[data-theme=dark]');
     else bad('site.css 含暗色主题块', '缺 [data-theme=dark]');
   }
 
-  // 2) 每个 island 产物存在且不含 react
-  for (const name of ISLAND_ENTRIES) {
-    const p = path.join(OUT_JS, `${name}.js`);
-    if (!existsSync(p)) {
-      bad(`js/${name}.js 存在`, p);
-      continue;
+  // 2) 每个 island 入口产物存在；入口与 shared chunk 都不许含 react
+  const jsFiles = [];
+  const walk = async (dir, prefix) => {
+    for (const name of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = path.join(dir, name.name);
+      if (name.isDirectory()) await walk(full, `${prefix}${name.name}/`);
+      else if (name.name.endsWith('.js')) jsFiles.push({ rel: `${prefix}${name.name}`, full });
     }
-    const js = await readFile(p, 'utf8');
-    const size = (await stat(p)).size;
-    if (/react/i.test(js)) bad(`js/${name}.js 无 react`, '打进了 react');
-    else ok(`js/${name}.js 无 react`, `${size} B`);
+  };
+  await walk(OUT_JS, '');
+
+  for (const name of entries) {
+    if (existsSync(path.join(OUT_JS, `${name}.js`))) ok(`js/${name}.js 存在`, '');
+    else bad(`js/${name}.js 存在`, '缺产物');
+  }
+  for (const { rel, full } of jsFiles) {
+    const js = await readFile(full, 'utf8');
+    const size = (await stat(full)).size;
+    if (/react/i.test(js)) bad(`js/${rel} 无 react`, '打进了 react');
+    else ok(`js/${rel} 无 react`, `${size} B`);
   }
 
   // 3) 字体就位且不是空壳
@@ -176,11 +213,12 @@ async function selfCheck() {
 }
 
 async function main() {
+  const entries = islandEntries();
   await clean();
   buildCss();
-  await buildJs();
+  await buildJs(entries);
   await copyFonts();
-  await selfCheck();
+  await selfCheck(entries);
 }
 
 await main();

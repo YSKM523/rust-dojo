@@ -20,9 +20,11 @@
  *
  *   - 选择器：[data-fx="reveal"]
  *   - class 必须自带 fx-reveal（无 JS 时 CSS 保证可见；html.fx-js 下才隐藏待揭示）
- *   - data-fx-delay  可选，级联延迟毫秒数，对应 Reveal 的 delay prop。
- *                    模板也可以直接写 style="--fx-delay: 90ms"，两种都行；
- *                    本 island 见到 data-fx-delay 就写 --fx-delay，缺省不动。
+ *   - data-fx-delay  可选，级联延迟毫秒数，对应 Reveal 的 delay prop（缺省 0）。
+ *                    island 总会把它写成内联 style 的 --fx-delay（没写属性就写 0ms，
+ *                    照 Reveal.tsx 的 `delay = 0` 默认值），所以祖先上的 --fx-delay
+ *                    不会被意外继承下来。模板要直接写 style="--fx-delay: 90ms" 也行，
+ *                    但同一元素上 data-fx-delay 优先（island 后写）。
  *   - reduced motion 下立即 add('is-in')（CSS 侧本就把动画全禁掉，等价于直接可见）
  */
 
@@ -45,8 +47,11 @@ export function mountReveal(root: ParentNode = document): void {
   if (els.length === 0) return;
 
   for (const el of els) {
-    const delay = el.getAttribute('data-fx-delay');
-    if (delay !== null) el.style.setProperty('--fx-delay', `${Number(delay) || 0}ms`);
+    // 与 Reveal.tsx 对齐：delay 缺省是 0，且**总是**写进内联 style。
+    // 只在有 data-fx-delay 时才写的话，祖先上的非零 --fx-delay 会被继承下来，
+    // 变成没人要求过的延迟。
+    const delay = Number(el.getAttribute('data-fx-delay') ?? 0) || 0;
+    el.style.setProperty('--fx-delay', `${delay}ms`);
   }
 
   if (typeof IntersectionObserver === 'undefined' || prefersReducedMotion()) {
