@@ -193,7 +193,7 @@ fn exercise_page_renders_title_prompt_data_island_editor_and_navigation() {
 #[test]
 fn exercise_page_data_island_contains_no_bare_less_than_characters() {
     let page =
-        render_exercise_page("/exercise/m1-01", None).expect("exercise page renders a response");
+        render_exercise_page("/exercise/m1-04", None).expect("exercise page renders a response");
     let marker = "<script type=\"application/json\" id=\"exercise-data\">";
     let json = page
         .html
@@ -204,7 +204,13 @@ fn exercise_page_data_island_contains_no_bare_less_than_characters() {
         .expect("exercise data script closes")
         .0;
 
+    assert!(json.contains("\\u003c"));
     assert!(!json.contains('<'));
+    let data: serde_json::Value =
+        serde_json::from_str(json).expect("exercise data is valid inline JSON");
+    assert!(data["starterCode"]
+        .as_str()
+        .is_some_and(|code| code.contains("<sum>")));
 }
 
 #[test]

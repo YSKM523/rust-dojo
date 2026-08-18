@@ -46,7 +46,8 @@
  *       hiddenTests   string?  选填（judgeMode==='tests' 用）
  *       assertSource  string?  选填
  *       crateType     'bin' | 'lib' | 缺省
- *   - 模板必须把内容里的 `</` 转义成 `<\/`，否则提前闭合 <script>。
+ *   - 模板必须把内容里的所有 `<` 转义成 JSON Unicode 转义 `\u003c`，
+ *     避免内联数据提前闭合或干扰 <script>。
  *
  * ---- 2. island 根与编辑器 -----------------------------------------
  *

@@ -86,3 +86,19 @@ HTTP_STATUS=200
 - 工作区既有 `.superpowers/sdd/2026-08-18-rust-ssr-phase-b/task-6-report.md` 修改保持原样，不纳入本提交。
 
 DONE
+
+# Task 13 修复轮 2
+
+## 修复内容
+
+- `workers/api/tests/content.rs` 的接线守卫改为渲染 `/exercise/m1-04`，其 `starterCode` 含真实的 `<sum>` 测试数据。
+- 守卫现在同时断言 `#exercise-data` 文本含 `\u003c`、不含裸 `<`，并经 `serde_json::from_str` 解析后确认 `starterCode` 仍含 `<sum>`。
+- `islands/exercise.ts` 的协议注释改为准确描述所有 `<` 均转义为 JSON Unicode 转义 `\u003c`。
+
+## RED / GREEN 证据
+
+- RED：临时把 `escape_inline_json_for_script` 改回旧的 `</` → `<\/` 实现后，运行 `cargo test --test content exercise_page_data_island_contains_no_bare_less_than_characters -- --exact`，exit 101；失败于 `assertion failed: json.contains("\\u003c")`（0 passed，1 failed）。
+- GREEN：还原整体 `<` → `\u003c` 后，同一定向命令 exit 0（1 passed，0 failed）。
+- 全量：`cd workers/api && cargo test` exit 0；22 个 unit、30 个 integration、0 个 doc failure。
+
+DONE
