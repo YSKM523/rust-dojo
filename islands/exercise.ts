@@ -482,7 +482,8 @@ export function mountExercise(root: ParentNode = document, deps: ExerciseDeps = 
       node.remove();
     }
     const nodes: HTMLElement[] = [];
-    if (error !== null) nodes.push(runErrorBox(error));
+    // 与 React 的 `{error && …}` 一致：空串错误不渲染节点（truthy 判定，不是 !== null）。
+    if (error) nodes.push(runErrorBox(error));
     if (result) nodes.push(verdictBanner(result.verdict));
     const output = runOutput(result, running);
     if (output) nodes.push(output);
@@ -535,7 +536,8 @@ export function mountExercise(root: ParentNode = document, deps: ExerciseDeps = 
 
     aiRoot.querySelector('[data-exercise-ai-error]')?.remove();
     aiRoot.querySelector('[data-exercise-ai-reply]')?.remove();
-    if (aiError !== null) {
+    // 同上，照 AiCopilot.tsx 的 `{error && …}`。
+    if (aiError) {
       const node = document.createElement('p');
       node.setAttribute('role', 'alert');
       node.setAttribute('data-exercise-ai-error', '');

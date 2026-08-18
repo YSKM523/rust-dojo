@@ -103,3 +103,78 @@ components/ 一行未改，React 组件测试全部保留。
    它只在 `/exercise/[id]` 一页加载，不影响其它路由。
 7. **判题字段泄漏面**：`expectedStdout` / `hiddenTests` / `assertSource` 进内联 JSON —— 与 brief 一致，
    现网本就把它们发到客户端（Phase A 审计已记「非真保密」），**泄漏面持平不扩大**，`solutionCode` 仍不出现。
+
+---
+
+# 追加：审阅 Needs fixes 三条的修复（commit 见文末）
+
+## 修复 1 [中] 八个 `@codemirror/*` 提升为直接依赖（不等 B4）
+
+`package.json` 的 `dependencies` 新增（按 `node_modules` 实装 = lock 中的实际版本，沿用仓库既有 `^` 风格）：
+
+```
+@codemirror/autocomplete ^6.20.3   @codemirror/language      ^6.12.4   @codemirror/state          ^6.7.1
+@codemirror/commands     ^6.10.4   @codemirror/lint          ^6.9.7    @codemirror/theme-one-dark ^6.1.3
+                                   @codemirror/search        ^6.7.1    @codemirror/view           ^6.43.6
+```
+
+**无版本漂移自证**：`git diff package-lock.json` 只有**一段** hunk、**只有新增行**（`grep -c '^-'` = 1，
+那一行就是 `--- a/package-lock.json` 的 diff 头），新增内容全部落在 root `packages[""].dependencies` 的
+声明块里；lock 中 9 个 `node_modules/@codemirror/*` 条目**一个字节没动**。
+
+过程记录：先跑 `npm install --package-lock-only --prefer-offline`（`--offline` 会因未缓存的
+`@tailwindcss/oxide-wasm32-wasi` tarball 报 ENOTCACHED），npm 输出 `up to date`、**没有改任何 @codemirror 版本**，
+但顺手把 `@tailwindcss/oxide-wasm32-wasi` 的 6 个 bundled 子依赖（dev + optional + inBundle）展开进了 lock ——
+与本次改动无关的噪音。为把 diff 收敛到「只发生声明位置变化」，把 lock 回滚到改动前，只把这 8 行声明写回 root
+`dependencies` 块。随后三方一致性逐包核对通过（declared / lock / 实装版本三者相等）、`npm ls` 全部 deduped、
+`npm run assets` 与全量 vitest 均绿。
+
+## 修复 2 [低] 错误节点改 truthy 判定
+
+`islands/exercise.ts:486` `if (error !== null)` → `if (error)`；`:540` `if (aiError !== null)` → `if (aiError)`，
+与 React 的 `{error && …}` 一致：**空串错误不渲染节点**。
+（`aiStatus()` 里本来就是 `error || …` 的 truthy 判定，改完两处语义才自洽——空串错误不会把状态推成 failed。）
+
+新增两条测试：
+- `keeps an empty judge error from rendering a run error node`：判题抛 `new Error('')` →
+  无 `[data-exercise-dynamic]`、无 `[role="alert"]`、AI 状态不转 failed（debug 按钮不出现）。
+- `keeps an empty AI error payload from rendering an error node`：**非 2xx + `{error:''}`**
+  （这条才真正走到 `aiError = ''` 分支：`payload.error ?? '出错了'` 对空串不回落）与 **2xx + `{error:''}`**
+  （走 else，`reply` 为 `''`）两种，都不产生错误节点也不产生回复节点。
+
+**负向自证**：把两处改回 `!== null` 后重跑 → 恰好这两条红（`2 failed | 9 passed`），改回 truthy 后复绿。
+
+## 修复 3 [低·测试] 断言补强
+
+- **CM 装配**（原 `mounts a real CodeMirror editor…` 重写为 `assembles the real CodeMirror editor exactly like CodeEditor.tsx`）
+  不再只看 `.cm-editor` 是否存在，改为直接读 `EditorView.findFromDOM(host)` 拿到 view 后自证：
+  - `view.state.facet(language)?.name === 'rust'` —— **rust() 扩展确实装上**（不靠高亮 class 猜），
+    外加 `.cm-content span` 数量 > 0；
+  - `view.state.facet(EditorView.darkTheme) === true` 且样式规则含 `#282c34` —— **oneDark 生效**；
+  - 样式规则含 `height: 360px` —— **360px 高度**；含 `height: 100% !important` —— scrollerTheme 也在；
+  - `.cm-lineNumbers` 在、`.cm-foldGutter` 不在 —— basicSetup 四项覆盖生效。
+- **AI 请求体**：hint 与 explain 从 `toMatchObject` 改成 **`toEqual` 全字段**
+  （`action / exerciseId / code / errorMsg / status` 五个键一个不多一个不少），与 debug 那条口径一致。
+- **构建产物共享 chunk 单例守卫**（新 `describe('assets-dist 产物（需先跑 npm run assets）')`）：
+  读 `assets-dist/assets/js/`，断言 `chunks/*.js` **恰好一个**、`exercise.js` 引用它且不含 react、
+  `progress-badge.js` 引用**同一个** chunk、该 chunk 内含 `rustdojo:completed`（= progress store 本体）。
+  `assets-dist` 整目录 gitignore 且 `npm run assets` 会先 `rm -rf` 再重建，所以用
+  `describe.skipIf(!BUILT)` 守门（要求 `exercise.js` + `progress-badge.js` + `chunks/` 三者齐全）——
+  干净 checkout 未构建时跳过而不是误红。**已实测撞到过一次并行重建窗口导致的假红**，故意加宽了这个闸门；
+  skipIf 在收集期求值，若正好在收集之后、断言之前撞上 `rm -rf`，理论上仍可能抖动，但该守卫不是切流验收门，
+  真正的产物闸门仍是 `npm run assets` 自检的 33 条。
+
+## 复验（Node 22）
+
+- `npx tsc --noEmit` 0 error；`npx eslint islands/exercise.ts islands/exercise.test.ts` 0 问题。
+- `npm run assets` 自检 **33/33 PASS**（`exercise.js` 无 react；共享 chunk 仍只有一个，五个入口共同 import）。
+- `npx vitest run` 全量 **47 passed | 1 skipped（210 tests passed，较修复前 +3）**；
+  `islands/exercise.test.ts` 从 8 例增至 **11 例**全绿。
+- 真浏览器 fixture（playwright-core 1.60 + `chromium-1179`，`--no-sandbox`，scratchpad 临时文件不进仓）
+  改动后复跑 **23/23 PASS**。
+- 未触碰并行任务的 `workers/api/**` 与 `scripts/gen-manifest.mjs`。
+
+## 遗留
+
+原报告「第 4 节自决与疑虑」的第 5 条（依赖声明遗留项）**已由修复 1 关闭**，B4 不再需要补这一步；
+B4 删 `@uiw/react-codemirror` 时只需确认 `codemirror` 顶层包是否还有人用即可（本 island 不 import 它）。

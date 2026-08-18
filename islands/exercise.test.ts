@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 import { fireEvent } from '@testing-library/dom';
+import { language } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearProgress, getCompleted } from '@/lib/progress/store';
 import type { JudgeResult } from '@/lib/rust/types';
@@ -252,7 +256,7 @@ describe('exercise island', () => {
     unmount();
   });
 
-  it('mounts a real CodeMirror editor whose external writes do not re-enter changeCode', () => {
+  it('assembles the real CodeMirror editor exactly like CodeEditor.tsx', () => {
     renderFixture();
     const unmount = mountExercise(document, {
       judge: vi.fn(),
@@ -261,10 +265,50 @@ describe('exercise island', () => {
 
     const host = document.querySelector<HTMLElement>('[data-exercise-editor]')!;
     expect(host.querySelector('.cm-editor')).toBeTruthy();
-    expect(host.querySelector('.cm-gutters')).toBeTruthy();
     expect(host.querySelector('.cm-content')!.textContent).toContain('fn main()');
-    // foldGutter:false —— 不允许出现折叠列
+    // basicSetup: lineNumbers 开、foldGutter 关
+    expect(host.querySelector('.cm-gutters')).toBeTruthy();
+    expect(host.querySelector('.cm-lineNumbers')).toBeTruthy();
     expect(host.querySelector('.cm-foldGutter')).toBeNull();
+
+    const view = EditorView.findFromDOM(host)!;
+    // rust() 扩展确实装上了（language facet 直接自证，不靠高亮 class 猜）
+    expect(view.state.facet(language)?.name).toBe('rust');
+    expect(host.querySelectorAll('.cm-content span').length).toBeGreaterThan(0);
+    // theme="dark" → oneDark：darkTheme facet 为真，主题样式里有 oneDark 的背景色
+    expect(view.state.facet(EditorView.darkTheme)).toBe(true);
+    const rules = view.state
+      .facet(EditorView.styleModule)
+      .map((mod) => mod.getRules())
+      .join('\n');
+    expect(rules).toMatch(/#282c34/i);
+    // height="360px" → 外层 & 规则
+    expect(rules).toContain('height: 360px');
+    // scrollerTheme（@uiw 版随高度一起注入）
+    expect(rules).toContain('height: 100% !important');
+
+    // 外部写入（重置语义）不回灌 onChange
+    const before = view.state.doc.toString();
+    expect(before).toBe(STARTER);
+
+    unmount();
+  });
+
+  it('keeps an empty judge error from rendering a run error node (React `{error && …}`)', async () => {
+    renderFixture();
+    const editor = fakeEditor();
+    const judge = vi.fn(async () => {
+      throw new Error('');
+    });
+    const unmount = mountExercise(document, { judge, createEditor: editor.factory });
+
+    fireEvent.click(runButton());
+    await vi.waitFor(() => expect(runButton()).not.toBeDisabled());
+
+    expect(dynamicNodes()).toHaveLength(0);
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+    // 空串错误同样不把 AI 状态推成 failed（React 的 `error || …` 也是 truthy 判定）
+    expect(aiButton('debug')).toBeNull();
 
     unmount();
   });
@@ -325,17 +369,25 @@ describe('exercise island', () => {
     expect(aiButton('hint')).toHaveTextContent('思考中…');
     resolveAi(response({ reply: '提示：先看类型' }));
     await vi.waitFor(() => expect(aiButton('hint')).not.toBeDisabled());
-    expect(JSON.parse(String(request.mock.calls[1][1].body))).toMatchObject(
-      { action: 'hint', status: 'failed' },
-    );
+    expect(JSON.parse(String(request.mock.calls[1][1].body))).toEqual({
+      action: 'hint',
+      exerciseId: 'm1-01',
+      code: 'fn main() { oops }',
+      errorMsg: 'error[E0425]: cannot find value',
+      status: 'failed',
+    });
 
     // 3) explain 动作 + 服务端错误分支
     fireEvent.click(aiButton('explain')!);
     resolveAi(response({ error: 'AI 暂时不可用' }, 500));
     await vi.waitFor(() => expect(aiButton('explain')).not.toBeDisabled());
-    expect(JSON.parse(String(request.mock.calls[2][1].body))).toMatchObject(
-      { action: 'explain' },
-    );
+    expect(JSON.parse(String(request.mock.calls[2][1].body))).toEqual({
+      action: 'explain',
+      exerciseId: 'm1-01',
+      code: 'fn main() { oops }',
+      errorMsg: 'error[E0425]: cannot find value',
+      status: 'failed',
+    });
     const aiError = document.querySelector('[data-exercise-ai-error]')!;
     expect(aiError).toHaveAttribute('role', 'alert');
     expect(aiError).toHaveClass('mt-3', 'text-sm', 'text-bad');
@@ -380,10 +432,71 @@ describe('exercise island', () => {
     unmount();
   });
 
+  it('keeps an empty AI error payload from rendering an error node', async () => {
+    renderFixture();
+    const editor = fakeEditor();
+    const request = vi
+      .fn<AiRequestCall>()
+      // 非 2xx + error:'' → React 走 setError('')，再被 `{error && …}` 挡住：不渲染节点
+      .mockResolvedValueOnce(response({ error: '' }, 500))
+      // 2xx + error:'' → 走 else 分支 setReply(''），`{reply && …}` 同样不渲染
+      .mockResolvedValueOnce(response({ error: '' }, 200));
+    const unmount = mountExercise(document, {
+      judge: vi.fn(),
+      request,
+      createEditor: editor.factory,
+    });
+
+    fireEvent.click(aiButton('hint')!);
+    await vi.waitFor(() => expect(aiButton('hint')).not.toBeDisabled());
+    expect(document.querySelector('[data-exercise-ai-error]')).toBeNull();
+    expect(document.querySelector('[data-exercise-ai-reply]')).toBeNull();
+
+    fireEvent.click(aiButton('hint')!);
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(aiButton('hint')).not.toBeDisabled());
+    expect(document.querySelector('[data-exercise-ai-error]')).toBeNull();
+    expect(document.querySelector('[data-exercise-ai-reply]')).toBeNull();
+
+    unmount();
+  });
+
   it('does nothing when the island root or the inline JSON is missing', () => {
     document.body.innerHTML = '<div data-island="exercise"></div>';
     expect(mountExercise(document, { judge: vi.fn() })()).toBeUndefined();
     document.body.innerHTML = '<div></div>';
     expect(mountExercise(document, { judge: vi.fn() })()).toBeUndefined();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* 构建产物守卫：共享 chunk 必须是单例（依赖 `npm run assets` 先跑过）      */
+/* ------------------------------------------------------------------ */
+
+const JS_DIR = path.resolve(__dirname, '..', 'assets-dist', 'assets', 'js');
+const CHUNK_DIR = path.join(JS_DIR, 'chunks');
+// assets-dist 整目录 gitignore，且 `npm run assets` 会先 rm -rf 再重建。
+// 没构建过（CI 干净 checkout）或正巧撞上重建窗口时跳过，构建齐了才断言。
+const BUILT =
+  existsSync(path.join(JS_DIR, 'exercise.js')) &&
+  existsSync(path.join(JS_DIR, 'progress-badge.js')) &&
+  existsSync(CHUNK_DIR);
+
+describe.skipIf(!BUILT)('assets-dist 产物（需先跑 `npm run assets`）', () => {
+  it('keeps exactly one shared chunk and has exercise.js import it', () => {
+    const chunkDir = CHUNK_DIR;
+    const chunks = readdirSync(chunkDir).filter((name) => name.endsWith('.js'));
+    // 多于一个 chunk = lib/progress/store.ts 被拆成多份，markCompleted 与
+    // progress-badge 的 listener 就不在同一个 Set 里（见 build-site-assets.mjs 注释）。
+    expect(chunks).toHaveLength(1);
+
+    const exercise = readFileSync(path.join(JS_DIR, 'exercise.js'), 'utf8');
+    expect(exercise).toContain(`./chunks/${chunks[0]}`);
+    expect(exercise).not.toMatch(/react/i);
+
+    // 同一份 chunk 必须被 progress-badge 复用，否则「判过即亮徽章」在同页失效
+    const badge = readFileSync(path.join(JS_DIR, 'progress-badge.js'), 'utf8');
+    expect(badge).toContain(`./chunks/${chunks[0]}`);
+    expect(readFileSync(path.join(chunkDir, chunks[0]), 'utf8')).toContain('rustdojo:completed');
   });
 });
