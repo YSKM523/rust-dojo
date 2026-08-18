@@ -28,11 +28,19 @@ pub fn is_valid_email(email: &str) -> bool {
     let Some(domain) = parts.next() else {
         return false;
     };
-    if parts.next().is_some() || local.is_empty() || domain.is_empty() || !without_space_or_at(local) || !without_space_or_at(domain) {
+    if parts.next().is_some() || local.is_empty() || !without_space_or_at(local) {
         return false;
     }
 
-    matches!(domain.rfind('.'), Some(dot) if dot > 0 && dot + 1 < domain.len())
+    domain.match_indices('.').any(|(dot, _)| {
+        let (before_dot, dot_and_after) = domain.split_at(dot);
+        let after_dot = &dot_and_after['.'.len_utf8()..];
+
+        !before_dot.is_empty()
+            && !after_dot.is_empty()
+            && without_space_or_at(before_dot)
+            && without_space_or_at(after_dot)
+    })
 }
 
 pub fn evaluate_code(row: &CodeRow, input: &str, now_ms: i64) -> CodeVerdict {
@@ -89,9 +97,14 @@ mod tests {
     #[test]
     fn email_validation_matches_the_typescript_regular_expression() {
         assert!(is_valid_email("a@b.c"));
-        assert!(!is_valid_email("a b@c.d"));
-        assert!(is_valid_email("a\u{0085}@b.c"));
+        assert!(is_valid_email("a@b.c."));
+        assert!(is_valid_email("a@b.."));
+        assert!(!is_valid_email("a@.c"));
+        assert!(!is_valid_email("a@b."));
         assert!(!is_valid_email("a@b"));
+        assert!(!is_valid_email("a b@c.d"));
+        assert!(is_valid_email("a@b.c.d"));
+        assert!(is_valid_email("a\u{0085}@b.c"));
         assert!(!is_valid_email("a@@b.c"));
     }
 
