@@ -31,7 +31,7 @@ function token(block: string, name: string): string {
   return match[1];
 }
 
-const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+const css = readFileSync(join(process.cwd(), 'islands/site.css'), 'utf8');
 const light = themeBlock(css, 'light');
 const dark = themeBlock(css, 'dark');
 

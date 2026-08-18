@@ -1,5 +1,5 @@
 {
-  "name": "rust-dojo-api",
+  "name": "rust-dojo",
   "main": "build/worker/shim.mjs",
   "compatibility_date": "2025-09-23",
   "build": { "command": "npm --prefix ../.. run assets && cargo install -q worker-build@0.1.14 && worker-build --release" },

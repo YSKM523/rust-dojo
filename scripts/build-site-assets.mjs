@@ -32,8 +32,9 @@ const OUT = path.join(OUT_ROOT, 'assets');
 const OUT_JS = path.join(OUT, 'js');
 const OUT_FONTS = path.join(OUT, 'fonts');
 const CSS_ENTRY = path.join(ROOT, 'islands', 'site.css');
+const STATIC_SOURCE = path.join(ROOT, 'islands', 'static');
 const TEMPLATES_DIR = path.join(ROOT, 'workers', 'api', 'templates');
-const FAVICON_SOURCE = path.join(ROOT, 'app', 'favicon.ico');
+const FAVICON_SOURCE = path.join(STATIC_SOURCE, 'favicon.ico');
 const FAVICON_OUT = path.join(OUT_ROOT, 'favicon.ico');
 const APP_ICONS = ['icon.png', 'apple-icon.png'];
 const PUBLIC_ROOT_FILES = ['hero-blueprint.webp'];
@@ -133,9 +134,9 @@ async function copyFonts() {
 async function copyStaticIcons() {
   await copyFile(FAVICON_SOURCE, FAVICON_OUT);
   for (const name of APP_ICONS) {
-    await copyFile(path.join(ROOT, 'app', name), path.join(OUT_ROOT, name));
+    await copyFile(path.join(STATIC_SOURCE, name), path.join(OUT_ROOT, name));
   }
-  log('icons', `app/{favicon.ico,${APP_ICONS.join(',')}} -> assets-dist/`);
+  log('icons', `islands/static/{favicon.ico,${APP_ICONS.join(',')}} -> assets-dist/`);
   for (const name of PUBLIC_ROOT_FILES) {
     await copyFile(path.join(ROOT, 'public', name), path.join(OUT_ROOT, name));
   }

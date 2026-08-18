@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-async function loadModule(entry, exportNames) {
+async function loadModule(entry) {
   const result = await esbuild.build({
     entryPoints: [path.join(ROOT, entry)],
     bundle: true, write: false, format: 'esm', platform: 'node',
