@@ -44,3 +44,4 @@ yarn-error.log*
 
 # Phase B 静态资源产物（npm run assets 生成）
 /assets-dist/
+.superpowers/
