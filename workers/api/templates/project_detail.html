@@ -70,8 +70,7 @@
                     <input id="check-{{ view.item.id }}" type="checkbox" data-id="{{ view.item.id }}" data-checklist-input class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none border border-line bg-bg text-center font-bold leading-4 text-white after:block after:text-[11px] after:leading-4 checked:border-brand checked:bg-brand checked:after:content-['✓'] hover:border-brand focus-visible:outline-2 focus-visible:outline-brand">
                     <div class="min-w-0 flex-1">
                       <label for="check-{{ view.item.id }}" data-checklist-label class="block cursor-pointer text-sm leading-6 text-fg">
-                        <span class="mr-2 font-mono text-xs text-fg3">{{ view.item.id }}</span>
-                        {{ view.item.text }}
+                        <span class="mr-2 font-mono text-xs text-fg3">{{ view.item.id }}</span>{{ view.item.text }}
                       </label>
 
                       {% if view.has_test_command %}

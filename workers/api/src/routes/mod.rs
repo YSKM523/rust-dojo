@@ -4,6 +4,16 @@ pub mod progress;
 
 use worker::{Context, Env, Method, Request, Response, Result};
 
+use crate::pages::{self, RenderedPage};
+
+type PageHandler = fn(&str, Option<&str>) -> askama::Result<RenderedPage>;
+
+const PAGE_ROUTES: [(&str, PageHandler); 3] = [
+    ("/learn", pages::learn::render_page),
+    ("/project/", pages::project::render_page),
+    ("/", pages::resources::render_page),
+];
+
 pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     match (req.method(), req.path().as_str()) {
         (Method::Post, "/api/auth/request-code") => auth::request_code(req, env).await,
@@ -17,22 +27,30 @@ pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         (Method::Post, "/api/ai") => ai::ask(req, env).await,
         (Method::Get | Method::Head, path) if path != "/api" && !path.starts_with("/api/") => {
             let email = session_email(&req, &env);
-            if matches!(path, "/learn" | "/learn/") || path.starts_with("/learn/") {
-                let page = crate::pages::learn::render_page(path, email.as_deref())
-                    .map_err(|error| worker::Error::RustError(error.to_string()))?;
-                html(page.status, page.html)
-            } else if path.starts_with("/project/") {
-                let page = crate::pages::project::render_page(path, email.as_deref())
-                    .map_err(|error| worker::Error::RustError(error.to_string()))?;
-                html(page.status, page.html)
-            } else {
-                let page = crate::pages::resources::render_page(path, email.as_deref())
-                    .map_err(|error| worker::Error::RustError(error.to_string()))?;
-                html(page.status, page.html)
-            }
+            let render = page_handler(path);
+            let page = render(path, email.as_deref())
+                .map_err(|error| worker::Error::RustError(error.to_string()))?;
+            html(page.status, page.html)
         }
         _ => json(404, serde_json::json!({ "error": "not found" })),
     }
+}
+
+fn page_handler(path: &str) -> PageHandler {
+    PAGE_ROUTES
+        .iter()
+        .find(|(prefix, _)| {
+            if prefix.ends_with('/') {
+                path.starts_with(prefix)
+            } else {
+                path == *prefix
+                    || path
+                        .strip_prefix(prefix)
+                        .is_some_and(|suffix| suffix.starts_with('/'))
+            }
+        })
+        .map(|(_, handler)| *handler)
+        .unwrap_or(pages::resources::render_page)
 }
 
 fn session_email(req: &Request, env: &Env) -> Option<String> {

@@ -74,7 +74,10 @@
               <span class="px-2 py-0.5 text-xs font-bold bg-violet-700 text-white">{{ card.tier_label }}</span>
               {% else if card.is_senior %}
               <span class="px-2 py-0.5 text-xs font-bold bg-amber-700 text-white">{{ card.tier_label }}</span>
+              {% else if card.is_sprint %}
+              <span class="px-2 py-0.5 text-xs font-bold bg-brand text-white">{{ card.tier_label }}</span>
               {% else %}
+              {# Unknown tier keys intentionally retain the sprint badge instead of losing all styling. #}
               <span class="px-2 py-0.5 text-xs font-bold bg-brand text-white">{{ card.tier_label }}</span>
               {% endif %}
             </div>

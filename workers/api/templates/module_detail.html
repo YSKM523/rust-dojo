@@ -26,8 +26,7 @@
                 <li data-exercise-id="{{ item.exercise.id }}">
                   <a href="/exercise/{{ item.exercise.id }}" class="flex items-center justify-between rounded-md border border-line bg-panel px-4 py-3 shadow-card transition-colors hover:border-fg3">
                     <span class="text-fg">
-                      <span class="mr-2 text-fg3">{{ item.number }}.</span>
-                      {{ item.exercise.title }}
+                      <span class="mr-2 text-fg3">{{ item.number }}.</span>{{ item.exercise.title }}
                     </span>
                     <span class="text-xs text-fg3" data-exercise-difficulty>难度 {{ item.exercise.difficulty }}</span>
                     <span aria-label="已通关" class="text-ok" data-exercise-check hidden>

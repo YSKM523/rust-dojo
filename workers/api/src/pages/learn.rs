@@ -1,6 +1,9 @@
 use askama::Template;
 
-use super::content::{site_content, Exercise, Module, Project};
+use super::{
+    content::{site_content, Exercise, Module, Project},
+    render_not_found, RenderedPage,
+};
 
 const PAGE_TITLE: &str = "Rust 道场 — 从零到后端实战";
 
@@ -18,6 +21,7 @@ struct RoadmapCard<'a> {
     is_intermediate: bool,
     is_advanced: bool,
     is_senior: bool,
+    is_sprint: bool,
     progress_ids: String,
     progress_total: usize,
 }
@@ -50,20 +54,6 @@ struct ModuleDetailTemplate<'a> {
     module: &'a Module,
     lesson_html: &'a str,
     exercises: Vec<ExerciseView<'a>>,
-}
-
-#[derive(Template)]
-#[template(path = "not_found.html")]
-struct NotFoundTemplate<'a> {
-    title: &'static str,
-    active: &'static str,
-    authenticated: bool,
-    user_email: &'a str,
-}
-
-pub struct RenderedPage {
-    pub status: u16,
-    pub html: String,
 }
 
 pub fn render_index(user_email: Option<&str>) -> askama::Result<String> {
@@ -149,17 +139,6 @@ pub fn render_page(path: &str, user_email: Option<&str>) -> askama::Result<Rende
     }
 }
 
-fn render_not_found(user_email: Option<&str>) -> askama::Result<RenderedPage> {
-    NotFoundTemplate {
-        title: "页面不存在 — Rust 道场",
-        active: "home",
-        authenticated: user_email.is_some(),
-        user_email: user_email.unwrap_or_default(),
-    }
-    .render()
-    .map(|html| RenderedPage { status: 404, html })
-}
-
 fn module_card(module: &Module) -> RoadmapCard<'_> {
     let exercise_ids = site_content()
         .exercises
@@ -167,6 +146,19 @@ fn module_card(module: &Module) -> RoadmapCard<'_> {
         .filter(|exercise| exercise.module_id == module.id)
         .map(|exercise| exercise.id.as_str())
         .collect::<Vec<_>>();
+    let is_beginner = module.tier_key == "beginner";
+    let is_intermediate = module.tier_key == "intermediate";
+    let is_advanced = module.tier_key == "advanced";
+    let is_senior = module.tier_key == "senior";
+    let is_sprint = module.tier_key == "sprint";
+
+    // Keep the template's final else as a real release fallback to sprint styling,
+    // while debug builds surface content drift as soon as an unknown tier appears.
+    debug_assert!(
+        is_beginner || is_intermediate || is_advanced || is_senior || is_sprint,
+        "unknown tier key: {}",
+        module.tier_key
+    );
 
     RoadmapCard {
         is_project: false,
@@ -178,10 +170,11 @@ fn module_card(module: &Module) -> RoadmapCard<'_> {
         title: &module.title,
         summary: &module.summary,
         tier_label: &module.tier_label,
-        is_beginner: module.tier_key == "beginner",
-        is_intermediate: module.tier_key == "intermediate",
-        is_advanced: module.tier_key == "advanced",
-        is_senior: module.tier_key == "senior",
+        is_beginner,
+        is_intermediate,
+        is_advanced,
+        is_senior,
+        is_sprint,
         progress_ids: exercise_ids.join(","),
         progress_total: exercise_ids.len(),
     }
@@ -202,6 +195,7 @@ fn project_card(project: &Project) -> RoadmapCard<'_> {
         is_intermediate: false,
         is_advanced: false,
         is_senior: false,
+        is_sprint: false,
         progress_ids: project
             .items
             .iter()

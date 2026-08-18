@@ -130,6 +130,33 @@ fn learn_index_renders_all_eight_modules_and_progress_mounts() {
     assert!(html
         .contains("data-exercise-ids=\"m1-01,m1-02,m1-03,m1-04,m1-05,m1-06,m1-07,m1-08,m1-09\""));
     assert!(html.contains("href=\"/learn\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+    for class in [
+        "px-2 py-0.5 text-xs font-bold bg-emerald-700 text-white",
+        "px-2 py-0.5 text-xs font-bold bg-sky-700 text-white",
+        "px-2 py-0.5 text-xs font-bold bg-violet-700 text-white",
+        "px-2 py-0.5 text-xs font-bold bg-amber-700 text-white",
+        "px-2 py-0.5 text-xs font-bold bg-brand text-white",
+    ] {
+        assert!(
+            html.contains(&format!("class=\"{class}\"")),
+            "missing tier badge class: {class}"
+        );
+    }
+}
+
+#[test]
+fn template_dynamic_text_has_react_whitespace_parity() {
+    let module_html = render_learn_detail("m1", None)
+        .expect("module detail renders")
+        .expect("known module exists");
+    let project_html = render_project_detail("p1", None)
+        .expect("project detail renders")
+        .expect("known project exists");
+
+    assert!(module_html.contains("<span class=\"mr-2 text-fg3\">1.</span>println! 与格式化占位符"));
+    assert!(project_html.contains(
+        "<span class=\"mr-2 font-mono text-xs text-fg3\">p1-01</span>用 cargo new 初始化 mini_grep"
+    ));
 }
 
 #[test]
