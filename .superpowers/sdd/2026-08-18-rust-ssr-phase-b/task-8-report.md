@@ -193,3 +193,84 @@ PASS  reduced: marquee 由 CSS 停住（island 无分支）  animation-name: non
 - Reveal 的 reduced-motion 短路是 island 相对 `Reveal.tsx` 的既有（B0 起）差异，终态等价，本次沿用未改。
   若后续要求逐行等价，删掉 `mountReveal` 里的 `|| prefersReducedMotion()` 即可，测试会红一条。
 - `marquee` island 在模板逐节点照搬 `Marquee.tsx` 后是 no-op；保留它是为了协议完整 + 防御模板只写一份行内容。
+
+---
+
+# 修复轮（审阅 Needs fixes，6 条全部处理）
+
+commit `fix: exact fx parameter parity and tightened fx test gates`。改动仍只在
+`islands/fx.ts` + `islands/fx.test.ts`（+ 本报告）。产物 `fx.js` 5 028 B → 5 206 B。
+
+## 逐条
+
+**[高] 1. CountUp duration 吞掉显式 0** — `islands/fx.ts`
+原写法 `Number(attr ?? 900) || 900` 会把显式 `data-fx-duration="0"` 改成 900，而
+`CountUp.tsx` 是原样接受 prop 的：`duration={0}` → `(t-t0)/0 = Infinity` → `p` 夹到 1 →
+下一帧直达终值。改为只在「属性缺失 / 空串 / 非有限数」时回落：
+
+```ts
+const durationAttr = el.getAttribute('data-fx-duration');
+const parsedDuration = durationAttr === null || durationAttr.trim() === '' ? NaN : Number(durationAttr);
+const duration = Number.isFinite(parsedDuration) ? parsedDuration : COUNT_UP_DURATION;
+```
+
+文件头协议注释同步写明 0 的语义（含「island 不许把它悄悄改成 900」）。
+`t === t0` 时 `0/0 = NaN` 这个边界 React 侧同样存在，不做额外兜底，已在测试注释里记明。
+
+**[中] 2. HeroTerminal 吞掉 setItem 异常** — `islands/fx.ts`
+原来 `setItem` 抛异常被 catch 掉后继续播动画；React 侧 effect 会当场中断、DOM 停在 SSR 终态。
+改成 `catch { continue; }`——读失败当 `seen='1'`、写失败直接放弃本次播放，两条路径都与 React 一致。
+
+**[高·测试] 3. 默认 duration 锁不住 900** — `islands/fx.test.ts`
+原用例只断言 t=900 已到终值，改成 800 也绿（`Math.round` 把小数吃掉了，靠比数值锁不住）。
+换成用**「还排不排下一帧」**当判据——`p < 1` 才续帧，边界正好卡在 `t - t0 === duration`：
+
+```
+intersect → pending() === 1
+flush(899) → pending() === 1   // p = 899/900 < 1
+flush(900) → pending() === 0   // p = 1
+```
+
+800 会让 `flush(899)` 后 pending 变 0，1000 会让 `flush(900)` 后 pending 仍是 1，双向都红。
+另加两条：显式 `data-fx-duration="0"` 第一帧直达终值、写坏成 `"abc"` 才回落 900。
+
+**[中·测试] 4. Hero 时序缺「不早于」方向** — `islands/fx.test.ts`
+改成绝对时间轴 `at(t)`，每个时点成对断言「早 1ms 还没发生 / 到点发生了」：
+249↔250（起手）、275↔276 与 301↔302（26ms 步长）、`END-1`↔`END`（`END = 250+26*(len-1)`）、
+`END+179`↔`END+180`、`END+419`↔`END+420`、`END+899`↔`END+900`。
+新增「隐私模式 setItem 抛异常 → 保持终态」用例，覆盖第 2 条。
+
+**[中·测试] 5. observer options 无断言** — `islands/fx.test.ts`
+mock IO 现在把实例记进 `instances[]`（构造参数 + observe 目标）。Reveal 断言
+`{ rootMargin: '0px 0px -12% 0px', threshold: 0.05 }`；ModuleLadder 断言 `{ threshold: 0 }`
+并额外断言观察目标就是 `[data-fx-ladder-rows]` 那个 `<ol>`（对应 `rowRefs.current[0]?.parentElement`）。
+CountUp 的 `{ threshold: 0.4 }` 上一轮已有。
+
+**[低] 6. 卸载后排队的 rAF 仍会写 DOM** — `islands/fx.ts`
+CountUp 记 `rafId`（`tick` 里 `rafId = p < 1 ? requestAnimationFrame(tick) : 0`），卸载时
+`cancelAnimationFrame`；ModuleLadder 的 scroll 节流帧记 `scrollRaf`，卸载时同样撤掉——
+只 `removeEventListener` 挡得住新滚动，挡不住已经排在队里的那一帧跑 `recompute()` 写 `data-active`。
+测试替身改用 `Map<id, cb>` 以支持 cancel，两侧各加一条「卸载后帧被撤掉、DOM 不再变」的用例。
+
+## 验证
+
+- `npx vitest run islands/` → **7 files / 46 tests 全绿**（fx 自己 23 条，上一轮 17 条）
+- `npx vitest run`（全量）→ **46 passed | 1 skipped，198 passed | 61 skipped**
+  （上一轮那两条红是并行任务未落地的 `login.ts` / `me.ts`，现已补齐）
+- `npx tsc --noEmit`、`npx eslint islands/fx.ts islands/fx.test.ts` → 无输出
+- `npm run assets`（Node 22.22.2）→ **self-check 30/30 passed**，`js/fx.js 无 react (5206 B)`
+- playwright 真浏览器复跑（chromium-1179，`--no-sandbox`）：`[fx-probe] 7/7 passed`、
+  `[fx-probe-reduced] 5/5 passed`，与修复前一致，无回归
+
+### 负向自证（6 条，全部按预期变红，逐条还原）
+
+| 注入的改动 | 变红的用例 |
+|---|---|
+| `COUNT_UP_DURATION` 900 → 800 | 「缺省 duration 精确是 900ms」+「写坏才回落 900」（2 条） |
+| `BOOT_TYPE_INTERVAL` 26 → 25 | 「按 250/26ms 逐字打字」 |
+| duration 回落改回 `\|\|`（吞掉显式 0） | 「显式 data-fx-duration="0" 保持 0」 |
+| `setItem` catch 改回吞掉继续播 | 「sessionStorage 写不进去时保持终态」 |
+| `BOOT_LINE1_DELAY` 180 → 170 | 「按 250/26ms 逐字打字」 |
+| Reveal `rootMargin` -12% → -10% | 「进入视口加 is-in」 |
+
+还原后 `islands/fx.test.ts` 23/23 绿。

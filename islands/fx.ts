@@ -48,7 +48,10 @@
  *     这样无 JS / reduced-motion / 无 IntersectionObserver 时直接是对的。
  *   - data-fx-value     必填，目标整数
  *   - data-fx-suffix    可选，数字后缀（如 "+"），缺省空串
- *   - data-fx-duration  可选，毫秒，缺省 900
+ *   - data-fx-duration  可选，毫秒，**属性缺失或非有限数**时才回落 900（CountUp.tsx 的
+ *                       `duration = 900` 默认值）。显式写 0 就是 0：`(t-t0)/0 = Infinity`
+ *                       → p 直接夹到 1 → 下一帧就是终值，与 React 传 duration={0} 一致，
+ *                       island 不许把它悄悄改成 900。
  *   - island 只改 textContent，不碰 class（外层的 text-5xl 等由模板给）
  *
  * ---- 3. hero-terminal（HeroTerminal.tsx） -------------------------
@@ -216,12 +219,18 @@ export function mountCountUp(root: ParentNode = document): () => void {
   if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return NOOP;
 
   const observers: IntersectionObserver[] = [];
+  const cancels: Array<() => void> = [];
 
   for (const el of targets) {
     const value = Number(el.getAttribute('data-fx-value') ?? 0) || 0;
     const suffix = el.getAttribute('data-fx-suffix') ?? '';
-    const duration = Number(el.getAttribute('data-fx-duration') ?? COUNT_UP_DURATION) || COUNT_UP_DURATION;
+    // 只有「属性缺失 / 空串 / 非有限数」才回落默认值。不能写成 `|| COUNT_UP_DURATION`：
+    // 那样显式的 0 会被悄悄改成 900，而 React 侧 duration={0} 是「下一帧直达终值」。
+    const durationAttr = el.getAttribute('data-fx-duration');
+    const parsedDuration = durationAttr === null || durationAttr.trim() === '' ? NaN : Number(durationAttr);
+    const duration = Number.isFinite(parsedDuration) ? parsedDuration : COUNT_UP_DURATION;
     let started = false;
+    let rafId = 0;
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -234,18 +243,24 @@ export function mountCountUp(root: ParentNode = document): () => void {
           const p = Math.min(1, (t - t0) / duration);
           const eased = 1 - Math.pow(1 - p, 3);
           el.textContent = `${Math.round(value * eased)}${suffix}`;
-          if (p < 1) requestAnimationFrame(tick);
+          rafId = p < 1 ? requestAnimationFrame(tick) : 0;
         };
-        requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(tick);
       },
       { threshold: COUNT_UP_THRESHOLD },
     );
     io.observe(el);
     observers.push(io);
+    // 卸载时排队中的那一帧必须撤掉，否则它还会往已经不归本 island 管的 DOM 里写数字。
+    cancels.push(() => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+    });
   }
 
   return () => {
     for (const io of observers) io.disconnect();
+    for (const cancel of cancels) cancel();
   };
 }
 
@@ -276,9 +291,10 @@ export function mountHeroTerminal(root: ParentNode = document): () => void {
     const lineEls = Array.from(el.querySelectorAll<HTMLElement>('[data-fx-line]'));
     const cmd = cmdEl.textContent ?? '';
 
-    // HeroTerminal.tsx 里 sessionStorage 没包 try/catch：隐私模式下 effect 直接抛，
-    // 动画根本不会开始、DOM 停在 SSR 终态。这里把「读失败」当作 seen=已看过，
-    // 可观察行为与之完全一致。
+    // HeroTerminal.tsx 里 sessionStorage 没包 try/catch：隐私模式下 getItem 或 setItem
+    // 任意一个抛，effect 都会当场中断 —— 动画根本不会开始、DOM 停在 SSR 终态。
+    // island 这边把「读失败」当作 seen=已看过、「写失败」当作直接放弃本次播放，
+    // 两条路径的可观察行为都与 React 完全一致（决不能吞掉异常继续播）。
     let seen: string | null = '1';
     try {
       seen = sessionStorage.getItem(BOOT_KEY);
@@ -289,7 +305,7 @@ export function mountHeroTerminal(root: ParentNode = document): () => void {
     try {
       sessionStorage.setItem(BOOT_KEY, '1');
     } catch {
-      /* 上面已经读成功了，写失败就当没发生 */
+      continue;
     }
 
     const caret = document.createElement('span');
@@ -494,10 +510,12 @@ export function mountModuleLadder(root: ParentNode = document): () => void {
     };
 
     let ticking = false;
+    let scrollRaf = 0;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0;
         recompute();
         ticking = false;
       });
@@ -519,6 +537,9 @@ export function mountModuleLadder(root: ParentNode = document): () => void {
     cleanups.push(() => {
       io.disconnect();
       window.removeEventListener('scroll', onScroll);
+      // 摘监听只挡住新的滚动；已经排在队里的那一帧还是会跑 recompute() 写 data-active。
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
     });
   }
 
