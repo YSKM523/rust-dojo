@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="w-full overflow-hidden bg-bg">
+  <section class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg2" data-island="login">
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <div class="grid w-full gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
+        <header class="border-t border-line pt-6">
+          <p class="text-xs font-black uppercase tracking-[0.24em] text-brand">
+            ACCOUNT SYNC
+          </p>
+          <h1 class="mt-6 max-w-3xl text-5xl font-black leading-none text-fg sm:text-7xl">
+            登录 Rust 道场
+          </h1>
+          <p class="mt-6 max-w-2xl text-base leading-8 text-fg2">
+            用邮箱验证码登录，进度自动跨设备同步。
+          </p>
+        </header>
+
+        <section class="border border-line bg-panel shadow-card">
+          <div class="border-b border-line p-5">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-brand" data-login-step-label>
+              EMAIL PASS
+            </p>
+            <p class="mt-2 text-sm text-fg2" data-login-step-description>
+              输入邮箱，领取一次性验证码。
+            </p>
+          </div>
+          <div class="p-5" data-login-content>
+            <form class="space-y-4" novalidate data-login-email-form>
+              <input type="email" required aria-label="邮箱" aria-invalid="false" value="" placeholder="you@example.com" class="w-full border border-line bg-panel2 px-4 py-3 text-fg placeholder:text-fg3" data-login-email>
+              <button type="submit" class="w-full bg-brand px-4 py-3 font-bold text-white transition hover:bg-brand-hover disabled:opacity-50" data-login-submit>
+                发送验证码
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

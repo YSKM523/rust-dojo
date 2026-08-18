@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="w-full overflow-hidden bg-bg" data-island="me" data-exercise-ids="{{ exercise_ids }}">
+  <section class="relative isolate min-h-[calc(100svh-58px)] overflow-hidden border-b border-line px-4 py-10 sm:px-6 lg:px-8 bg-bg2">
+    <div class="panel-grid pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="panel-veil pointer-events-none absolute inset-0 -z-10"></div>
+    <div class="flex min-h-[calc(100svh-138px)] w-full items-center">
+      <div class="grid w-full gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
+        <header class="border-t border-line pt-6" data-me-header>
+          <p class="text-xs font-black uppercase tracking-[0.24em] text-brand">
+            PROGRESS LOG
+          </p>
+          <h1 class="mt-6 text-5xl font-black leading-none text-fg sm:text-7xl">
+            我的足迹
+          </h1>
+          <p class="mt-8 text-fg2">
+            已通关 <span class="align-baseline text-7xl font-black leading-none text-brand sm:text-8xl" data-me-solved>0</span> / {{ exercise_count }} 题
+          </p>
+          <div class="mt-8 flex flex-wrap items-center gap-4" data-me-actions>
+            <a href="/learn" class="text-sm font-bold text-link">
+              去路线图
+            </a>
+            <button class="border border-line px-3 py-1 text-sm text-fg2 hover:text-fg" data-me-clear-start>
+              清空进度
+            </button>
+          </div>
+        </header>
+
+        <ul class="grid gap-px bg-line shadow-card">
+          {% for view in modules %}
+          <li class="bg-panel p-4" data-me-module data-module-id="{{ view.module.id }}" data-exercise-ids="{{ view.exercise_ids }}">
+            <div class="flex items-center justify-between gap-4 text-sm">
+              <a href="/learn/{{ view.module.id }}" class="font-semibold text-fg hover:text-brand">{{ view.order_padded }} / {{ view.module.title }}</a>
+              <span class="shrink-0 text-fg3" data-me-module-count>0 / {{ view.exercise_count }}</span>
+            </div>
+            <div class="mt-3 h-1.5 w-full overflow-hidden bg-panel2">
+              <div class="h-full bg-brand" style="width: 0%" data-me-module-bar></div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

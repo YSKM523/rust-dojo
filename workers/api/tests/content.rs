@@ -3,6 +3,8 @@ use rust_dojo_api::pages::learn::{
     render_detail as render_learn_detail, render_index as render_learn_index,
     render_page as render_learn_page,
 };
+use rust_dojo_api::pages::login::render_page as render_login_page;
+use rust_dojo_api::pages::me::render_page as render_me_page;
 use rust_dojo_api::pages::project::{
     render_detail as render_project_detail, render_page as render_project_page,
 };
@@ -242,4 +244,102 @@ fn project_page_router_strips_the_prefix_only_once() {
 
     assert_eq!(page.status, 404);
     assert!(!page.html.contains("写一个能用的命令行搜索工具"));
+}
+
+#[test]
+fn login_page_server_renders_the_email_step_and_shared_shell() {
+    let page = render_login_page("/login", None).expect("login page renders");
+
+    assert_eq!(page.status, 200);
+    assert!(page
+        .html
+        .contains("<title>Rust 道场 — 从零到后端实战</title>"));
+    assert!(page.html.contains("data-island=\"login\""));
+    assert!(page.html.contains("ACCOUNT SYNC"));
+    assert!(page.html.contains("登录 Rust 道场"));
+    assert!(page.html.contains("<form class=\"space-y-4\" novalidate"));
+    assert!(page.html.contains("type=\"email\""));
+    assert!(page.html.contains("aria-label=\"邮箱\""));
+    assert!(page.html.contains("placeholder=\"you@example.com\""));
+    assert!(page.html.contains("发送验证码"));
+    assert!(!page.html.contains("aria-label=\"验证码\""));
+    assert!(!page.html.contains("role=\"alert\""));
+    assert!(page
+        .html
+        .contains("<script type=\"module\" src=\"/assets/js/login.js\"></script>"));
+    assert!(page.html.contains("href=\"/me\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg\""));
+}
+
+#[test]
+fn login_page_accepts_one_optional_slash_and_rejects_descendants() {
+    let trailing = render_login_page("/login/", None).expect("trailing slash renders");
+    let descendant = render_login_page("/login/nope", None).expect("descendant renders a response");
+    let duplicated =
+        render_login_page("/login/login", None).expect("duplicated prefix renders a response");
+
+    assert_eq!(trailing.status, 200);
+    assert_eq!(descendant.status, 404);
+    assert_eq!(duplicated.status, 404);
+    assert!(descendant.html.contains("页面不存在"));
+    assert!(descendant.html.contains("<html lang=\"zh-CN\""));
+}
+
+#[test]
+fn me_page_server_renders_all_module_progress_mounts() {
+    let page = render_me_page("/me", None).expect("me page renders");
+
+    assert_eq!(page.status, 200);
+    assert!(page
+        .html
+        .contains("<title>Rust 道场 — 从零到后端实战</title>"));
+    assert!(page.html.contains("data-island=\"me\""));
+    assert!(page.html.contains("PROGRESS LOG"));
+    assert!(page.html.contains("我的足迹"));
+    assert!(page.html.contains("data-me-solved>0</span> / 60 题"));
+    assert_eq!(
+        page.html.matches("data-me-module data-module-id=").count(),
+        8
+    );
+    assert!(page.html.contains("data-module-id=\"m1\""));
+    assert!(page
+        .html
+        .contains("data-exercise-ids=\"m1-01,m1-02,m1-03,m1-04,m1-05,m1-06,m1-07,m1-08,m1-09\""));
+    assert!(page.html.contains(
+        "href=\"/learn/m1\" class=\"font-semibold text-fg hover:text-brand\">01 / 起步与所有权</a>"
+    ));
+    assert!(page.html.contains("data-me-module-count>0 / 9</span>"));
+    assert!(page.html.contains("style=\"width: 0%\" data-me-module-bar"));
+    assert!(page.html.contains("清空进度"));
+    assert!(!page.html.contains("data-me-session-status"));
+    assert!(page.html.contains("href=\"/me\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+    assert!(page
+        .html
+        .contains("<script type=\"module\" src=\"/assets/js/me.js\"></script>"));
+}
+
+#[test]
+fn me_page_keeps_page_session_client_driven_while_topbar_uses_ssr_session() {
+    let page = render_me_page("/me", Some("learner@example.com")).expect("me page renders");
+
+    assert_eq!(page.status, 200);
+    assert!(page
+        .html
+        .contains("<span class=\"text-fg2\">learner@example.com</span>"));
+    assert!(page.html.contains("data-island=\"logout\""));
+    assert!(!page.html.contains("data-me-session-status"));
+}
+
+#[test]
+fn me_page_accepts_one_optional_slash_and_rejects_descendants() {
+    let trailing = render_me_page("/me/", None).expect("trailing slash renders");
+    let descendant = render_me_page("/me/nope", None).expect("descendant renders a response");
+    let duplicated = render_me_page("/me/me", None).expect("duplicated prefix renders a response");
+
+    assert_eq!(trailing.status, 200);
+    assert!(trailing.html.contains("href=\"/me\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg\""));
+    assert!(!trailing.html.contains("href=\"/me\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+    assert_eq!(descendant.status, 404);
+    assert_eq!(duplicated.status, 404);
+    assert!(descendant.html.contains("页面不存在"));
+    assert!(descendant.html.contains("<html lang=\"zh-CN\""));
 }
