@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Phase B 构建产物（npm run assets 生成的压缩 JS/CSS）
+    "assets-dist/**",
   ]),
 ]);
 
