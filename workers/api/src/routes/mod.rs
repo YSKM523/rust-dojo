@@ -56,6 +56,7 @@ fn page_handler(path: &str) -> PageHandler {
             }
         })
         .map(|(_, handler)| *handler)
+        // `home::render_page` returns 404 for non-root paths, making this the catch-all 404.
         .unwrap_or(pages::home::render_page)
 }
 

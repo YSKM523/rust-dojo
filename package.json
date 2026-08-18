@@ -6,7 +6,7 @@
   "author": "YSKM523",
   "license": "MIT",
   "scripts": {
-    "dev": "cd workers/api && wrangler dev",
+    "dev": "cd workers/api && wrangler dev --env-file ../../.dev.vars",
     "lint": "eslint .",
     "test": "vitest run",
     "assets": "node scripts/build-site-assets.mjs",
