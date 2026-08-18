@@ -17,9 +17,15 @@ pub async fn handle(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         (Method::Post, "/api/ai") => ai::ask(req, env).await,
         (Method::Get | Method::Head, path) if path != "/api" && !path.starts_with("/api/") => {
             let email = session_email(&req, &env);
-            let page = crate::pages::resources::render_page(path, email.as_deref())
-                .map_err(|error| worker::Error::RustError(error.to_string()))?;
-            html(page.status, page.html)
+            if matches!(path, "/learn" | "/learn/") || path.starts_with("/learn/") {
+                let page = crate::pages::learn::render_page(path, email.as_deref())
+                    .map_err(|error| worker::Error::RustError(error.to_string()))?;
+                html(page.status, page.html)
+            } else {
+                let page = crate::pages::resources::render_page(path, email.as_deref())
+                    .map_err(|error| worker::Error::RustError(error.to_string()))?;
+                html(page.status, page.html)
+            }
         }
         _ => json(404, serde_json::json!({ "error": "not found" })),
     }

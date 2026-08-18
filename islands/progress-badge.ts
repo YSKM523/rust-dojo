@@ -1,5 +1,5 @@
 /**
- * progress-badge island — 模块通关进度条
+ * progress-badge island — 模块、项目与练习列表完成态
  *
  * 语义事实源：components/ModuleProgressBadge.tsx（逐行移植）
  *   - n     = exerciseIds 里已完成的条数
@@ -31,6 +31,17 @@
  *   - [data-progress-text]  文案节点，island 只改 textContent
  *   - [data-progress-check] Check 图标（lucide Check，size=12，class="text-ok"），
  *                           island 只切 hidden 属性；模板必须初始带 hidden
+ *
+ * 练习列表协议（ExerciseListClient 的完成态）：
+ *   - 根选择器：[data-exercise-id]，属性值即 progress store id
+ *   - [data-exercise-difficulty] 未完成时显示，完成时加 hidden
+ *   - [data-exercise-check] 完成时显示，未完成时加 hidden；模板初始带 hidden
+ *
+ * 项目卡协议（ProjectCard 的完成态）：
+ *   - 根选择器：[data-project-progress]
+ *   - data-item-ids：逗号分隔的项目验收项 id
+ *   - [data-project-progress-bar]、[data-project-progress-text]、
+ *     [data-project-progress-check] 分别对应进度条、文案与 Check 图标
  */
 
 import { subscribe, getSnapshot } from '@/lib/progress/store';
@@ -40,6 +51,19 @@ function parseIds(el: HTMLElement): string[] {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function parseAttributeIds(el: HTMLElement, attribute: string): string[] {
+  return (el.getAttribute(attribute) ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function setHidden(el: Element | null, hidden: boolean): void {
+  if (!el) return;
+  if (hidden) el.setAttribute('hidden', '');
+  else el.removeAttribute('hidden');
 }
 
 function paint(root: ParentNode, done: Set<string>): void {
@@ -58,11 +82,30 @@ function paint(root: ParentNode, done: Set<string>): void {
 
     // 注意：Check 图标是 <svg>（SVGElement 没有 hidden IDL 属性），
     // 必须走 setAttribute/removeAttribute，不能写 .hidden = x。
-    const check = el.querySelector('[data-progress-check]');
-    if (check) {
-      if (n === total && total > 0) check.removeAttribute('hidden');
-      else check.setAttribute('hidden', '');
-    }
+    setHidden(el.querySelector('[data-progress-check]'), !(n === total && total > 0));
+  }
+
+  const exercises = root.querySelectorAll<HTMLElement>('[data-exercise-id]');
+  for (const el of Array.from(exercises)) {
+    const completed = done.has(el.getAttribute('data-exercise-id') ?? '');
+    setHidden(el.querySelector('[data-exercise-difficulty]'), completed);
+    setHidden(el.querySelector('[data-exercise-check]'), !completed);
+  }
+
+  const projects = root.querySelectorAll<HTMLElement>('[data-project-progress]');
+  for (const el of Array.from(projects)) {
+    const ids = parseAttributeIds(el, 'data-item-ids');
+    const total = ids.length;
+    const n = ids.filter((id) => done.has(id)).length;
+    const pct = total ? Math.round((n / total) * 100) : 0;
+
+    const bar = el.querySelector<HTMLElement>('[data-project-progress-bar]');
+    if (bar) bar.style.width = `${pct}%`;
+
+    const text = el.querySelector<HTMLElement>('[data-project-progress-text]');
+    if (text) text.textContent = `${n} / ${total} 已验收`;
+
+    setHidden(el.querySelector('[data-project-progress-check]'), !(n === total && total > 0));
   }
 }
 

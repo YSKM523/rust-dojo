@@ -1,4 +1,8 @@
 use rust_dojo_api::pages::content::{render_markdown, site_content};
+use rust_dojo_api::pages::learn::{
+    render_detail as render_learn_detail, render_index as render_learn_index,
+    render_page as render_learn_page,
+};
 use rust_dojo_api::pages::resources::{render_detail, render_index, render_page};
 
 #[test]
@@ -111,4 +115,47 @@ fn missing_resource_renders_the_html_not_found_page() {
     assert!(page.html.contains("href=\"/\""));
     assert!(page.html.contains("<html lang=\"zh-CN\""));
     assert!(page.html.contains("href=\"/resources\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors text-fg2 hover:text-fg\""));
+}
+
+#[test]
+fn learn_index_renders_all_eight_modules_and_progress_mounts() {
+    let html = render_learn_index(None).expect("learn index renders");
+
+    assert!(html.contains("训练路径"));
+    assert_eq!(html.matches("data-module-progress").count(), 8);
+    assert!(html.contains("data-module-id=\"m1\""));
+    assert!(html
+        .contains("data-exercise-ids=\"m1-01,m1-02,m1-03,m1-04,m1-05,m1-06,m1-07,m1-08,m1-09\""));
+    assert!(html.contains("href=\"/learn\" class=\"flex h-full shrink-0 items-center text-[13px] font-medium tracking-wide transition-colors font-semibold text-fg [box-shadow:inset_0_-2px_0_var(--brand)]\""));
+}
+
+#[test]
+fn learn_module_renders_lesson_markdown_and_exercise_mounts() {
+    let html = render_learn_detail("m1", None)
+        .expect("module detail renders")
+        .expect("known module exists");
+
+    assert!(html.contains("MODULE 1 / 小白"));
+    assert!(html.contains("<h2>起步与所有权</h2>"));
+    assert!(html.contains("prose max-w-none prose-pre:rounded-md prose-code:font-mono"));
+    assert!(html.contains("data-exercise-id=\"m1-01\""));
+    assert!(html.contains("难度 1"));
+}
+
+#[test]
+fn missing_learn_module_renders_the_html_not_found_page() {
+    let page = render_learn_page("/learn/nope", None).expect("missing module renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(page.html.contains("页面不存在"));
+    assert!(page.html.contains("<html lang=\"zh-CN\""));
+}
+
+#[test]
+fn learn_page_router_strips_the_prefix_only_once() {
+    let page =
+        render_learn_page("/learn//learn/m1", None).expect("learn namespace renders a response");
+
+    assert_eq!(page.status, 404);
+    assert!(!page.html.contains("<h2>起步与所有权</h2>"));
 }
